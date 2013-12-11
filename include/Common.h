@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <uuid/uuid.h>
 
+#include <errno.h>
+
 //Global Variables
 extern bool quit;
 extern bool debug;

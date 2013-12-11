@@ -27,6 +27,7 @@ class Client
         uuid_t Client_ID;
         uuid_t Server_ID;
         Network CL_Net;
+        int frameNum;
 
 };
 

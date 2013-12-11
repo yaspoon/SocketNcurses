@@ -37,6 +37,9 @@ class Server
             Player CL_player;
             struct sockaddr_storage CL_addr;
             socklen_t CL_addr_len;
+            int frameNo;
+            int ackNo;
+            int nextFrameNo;
 
             //Insert socket stuff here....
         };
@@ -44,6 +47,9 @@ class Server
         SV_Client clients[32];
         int clientCount;
         Network SV_Net;
+
+        bool addClient(uuid_t id, struct sockaddr_storage peer, socklen_t peer_len, int initialFrameNum);
+        bool handleFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
 };
 
 #endif // SERVER_H

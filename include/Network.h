@@ -36,14 +36,12 @@ class Network
         Network();
         virtual ~Network();
 
-        bool ConnectTo(std::string address, std::string port, SOCK_Type SockType);
-        bool SendFrame(NET_Type type, sockaddr_storage peer, socklen_t peer_len);
-        int ReceiveFrame(NET_Type *type, sockaddr_storage *peer, socklen_t *peer_len);
+        bool SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_t peer_len);
+        int ReceiveFrame(int fd, NET_Frame *frame, sockaddr_storage *peer, socklen_t *peer_len);
         int CreateSocket(std::string address, std::string port, SOCK_Type sockType, struct sockaddr_storage *peer, socklen_t *peer_len );
     protected:
     private:
         int frame_num;
-        int sfd;
         uuid_t id;
 };
 
