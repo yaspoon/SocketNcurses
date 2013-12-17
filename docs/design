@@ -19,11 +19,16 @@ Server::run
 	while(!quit)
 		poll for network input
 		if there is input from the network
-			for each frame
-				switch(frame.type)
+			for each netframe
+				switch(netframe.type)
 					ACK
+						handle(ack)
 					CONNECTION_REQUEST
+						handle(connectionrequest)
 					DATA
+						handle(data)
+					PING
+						handle(ping)
 			end for
 		end if
 	
