@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
     {
             if(mode == SERVER)
             {
-                Server myServer(port);
+                Server myServer(address, port);
                 myServer.run();
             }
             else if(mode == CLIENT)

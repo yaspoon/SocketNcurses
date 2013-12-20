@@ -44,7 +44,7 @@ void log(loglevel level, char *format, ...)
             }
             else
             {
-                return; //So dirty I know but more efficient then having to compile the output string only to not print it because your in debug mode...
+                return; //So dirty I know but more efficient then having to compile the output string only to not print it because your not in debug mode...
             }
             break;
         case LG_ERROR:

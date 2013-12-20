@@ -50,6 +50,8 @@ class Server
 
         bool addClient(uuid_t id, struct sockaddr_storage peer, socklen_t peer_len, int initialFrameNum);
         bool handleFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
+        bool sendACK(int fd, int ack_num, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
+        bool sendFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
 };
 
 #endif // SERVER_H

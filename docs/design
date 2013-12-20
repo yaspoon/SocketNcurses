@@ -15,30 +15,24 @@ Client sends a uuid in its connection request which is then stored in the client
 
 each client object has a player object associated with it, stores the in game details, xyz
 
-Server::run
+Server::run	
+	Network.setup()
+	Network.listen()
 	while(!quit)
-		poll for network input
-		if there is input from the network
-			for each netframe
-				switch(netframe.type)
-					ACK
-						handle(ack)
-					CONNECTION_REQUEST
-						handle(connectionrequest)
-					DATA
-						handle(data)
-					PING
-						handle(ping)
-			end for
-		end if
-	
+		getEvents from network
+		for each event
+			processEvent changing game state as required
+		end for
+		
 		run game frame
-	
+		
 		generate game update
 		for each client
-			send game update
+			Network.send(gameUpdate)
 		end for
 	end while
+		
+		
 	
 Client::run
 	create socket
@@ -68,3 +62,49 @@ Client::run
 	else
 		output: Couldn't connect to server
 	end if
+
+Network::listen()
+	create thread of Network::run
+	
+Network::getEvents() //Called by server/client to get events the network has generated from gettings frames
+	events //probably a linked list object...
+	if(mutex try lock events == 0)
+		get list of events
+		unlock events mutex
+	end if
+	
+	return events
+
+
+Network::run //This is going to need to be a thread...	
+	while(true)
+		poll for network input
+		if there is input from the network
+			for each netframe
+				if(frame.type != ACK)
+					sendAck(frame.num)
+				end if
+				
+				switch(netframe.type)
+					ACK
+						handle(ack)
+					CONNECTION_REQUEST
+						handle(connectionrequest)
+					DATA
+						handle(data)
+					PING
+						handle(ping)
+			end for
+		end if
+	end while
+	
+Network::handle(ack)
+	if(sender in connection list)
+		if(ack.num == expectedNum)
+			expectedNum++
+		end if
+	end if
+	
+Network::handle(ConnectionRequest)
+	
+	

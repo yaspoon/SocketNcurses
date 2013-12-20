@@ -10,6 +10,7 @@ Server::Server()
     SV_Address = "127.0.0.1";
     SV_Port = "34567";
     uuid_generate(SV_ID);
+    clientCount = 0;
 }
 
 Server::Server(std::string address, std::string port)
@@ -17,6 +18,7 @@ Server::Server(std::string address, std::string port)
     SV_Address = address;
     SV_Port = port;
     uuid_generate(SV_ID);
+    clientCount = 0;
 }
 
 Server::Server(std::string port)
@@ -24,6 +26,7 @@ Server::Server(std::string port)
     SV_Address = "127.0.0.1";
     SV_Port = port;
     uuid_generate(SV_ID);
+    clientCount = 0;
 }
 
 Server::~Server()
@@ -53,7 +56,7 @@ returnCodes_t Server::run()
         log(LG_DEBUG, "Added socket fd to epoll fine");
         struct epoll_event events[MAX_EVENTS];
 
-        //while(1)
+        while(!quit)
         {
 
             //log(LG_DEBUG, "Polling for network activity");
@@ -77,6 +80,12 @@ returnCodes_t Server::run()
                     getnameinfo((struct sockaddr*)&peer_addr, peer_addr_len, host, sizeof(host), serv, sizeof(serv), NI_NUMERICHOST | NI_NUMERICSERV);
 
                     log(LG_DEBUG, "Received %d bytes from %s:%s", nread, host, serv);
+
+                    if(frame.type != ACK)
+                    {
+                        log(LG_DEBUG, "Sending ACK %d, to %s:%s\n", frame.num, host,serv);
+                        sendACK(events[i].data.fd, frame.num, peer_addr, peer_addr_len);
+                    }
 
                     handleFrame(events[i].data.fd, frame, peer_addr, peer_addr_len);
 
@@ -140,9 +149,31 @@ bool Server::handleFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_a
             replyFrame.num = frame.num;
             replyFrame.type = ACK;
 
-            SV_Net.SendFrame(fd, replyFrame, peer_addr, peer_addr_len);
+            sendFrame(fd, replyFrame, peer_addr, peer_addr_len);
         }
     }
+
+    return retVal;
+}
+
+bool Server::sendACK(int fd, int ack_num, struct sockaddr_storage peer_addr, socklen_t peer_addr_len)
+{
+    bool retVal = false;
+
+    NET_Frame frame;
+    frame.type = ACK;
+    frame.num = ack_num;
+
+    sendFrame(fd, frame, peer_addr, peer_addr_len);
+
+    return retVal;
+}
+
+bool Server::sendFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_addr, socklen_t peer_addr_len)
+{
+    bool retVal = false;
+
+    sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr*) &peer_addr, peer_addr_len);
 
     return retVal;
 }
