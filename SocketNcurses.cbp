@@ -19,6 +19,7 @@
 				</Compiler>
 				<Linker>
 					<Add library="ncurses" />
+					<Add library="pthread" />
 				</Linker>
 			</Target>
 			<Target title="release">
@@ -44,6 +45,10 @@
 		</Linker>
 		<Unit filename="include/Client.h" />
 		<Unit filename="include/Common.h" />
+		<Unit filename="include/Event.h" />
+		<Unit filename="include/Iterator.h" />
+		<Unit filename="include/LinkedList.h" />
+		<Unit filename="include/LinkedListNode.h" />
 		<Unit filename="include/Network.h" />
 		<Unit filename="include/Player.h" />
 		<Unit filename="include/Server.h" />
@@ -51,6 +56,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Client.cpp" />
 		<Unit filename="src/Common.cpp" />
+		<Unit filename="src/Event.cpp" />
 		<Unit filename="src/Network.cpp" />
 		<Unit filename="src/Player.cpp" />
 		<Unit filename="src/Server.cpp" />
