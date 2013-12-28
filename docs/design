@@ -16,7 +16,7 @@ Client sends a uuid in its connection request which is then stored in the client
 each client object has a player object associated with it, stores the in game details, xyz
 
 Server::run	
-	Network.setup()
+	Network(address,port,SOCK_SERVER)
 	Network.listen()
 	while(!quit)
 		getEvents from network
@@ -62,10 +62,41 @@ Client::run
 	else
 		output: Couldn't connect to server
 	end if
-
-Network::listen()
-	create thread of Network::run
 	
+Network::Network(string address, string port, networktype) //netowrk type is server/client
+	this->address=address
+	this->port=port
+	this->type = networktype
+	this->socket = -1
+	uuid_generate(this->id)
+	connections = new C++ hashMap<std::string,sock_addr>
+	
+
+
+Network::Setup()
+
+	if(this->type==server)
+		getaddrinfo(NULL,port, &hints, &info)
+		this->socket = create socket
+		bind(socket, addr, addr_port)
+	else if(this->type==client)
+		getaddrinfo(address, port, &hints, &info)
+		this->socket = create socket
+		this->addr = addr; //servers address struct
+		this->addr_len = addr_len
+	endif
+	
+	Create thread of network::run
+	
+Network::send(Event object)
+	Create Frame object containing event
+	get lock on frame queue
+		add frame to queue
+	unlock frame queue
+	signal new frame has been added
+
+
+
 Network::getEvents() //Called by server/client to get events the network has generated from gettings frames
 	events //probably a linked list object...
 	if(mutex try lock events == 0)
