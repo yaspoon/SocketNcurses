@@ -39,12 +39,12 @@ bool Network::Setup(std::string address, std::string port, NET_Mode inMode, int 
             }
             else
             {
-                log(LG_ERROR, "Network::Setup Failed to create thread");
+                log(LG_ERROR, const_cast<char *>("Network::Setup Failed to create thread"));
             }
         }
         else
         {
-            log(LG_ERROR, "Network::Setup Failed to create socket");
+            log(LG_ERROR, const_cast<char *>("Network::Setup Failed to create socket"));
         }
     }
 
@@ -101,7 +101,7 @@ bool Network::SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_
     }
     else
     {
-        log(LG_ERROR, "Network::SendFrame Failed to write frame");
+        log(LG_ERROR, const_cast<char *>("Network::SendFrame Failed to write frame"));
     }
 
 
@@ -122,7 +122,7 @@ int Network::ReceiveFrame(int fd, NET_Frame *frame, struct sockaddr_storage *pee
     }
     else
     {
-        log(LG_ERROR, "Network::ReceiveFrame Failed to read from socket reason:%s", strerror(errno));
+        log(LG_ERROR, const_cast<char *>("Network::ReceiveFrame Failed to read from socket reason:%s"), strerror(errno));
     }
 
     return nread;
@@ -156,22 +156,22 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
 
     if(ret == 0)
     {
-        log(LG_DEBUG, "Got Address info, continuing");
+        log(LG_DEBUG, const_cast<char *>("Got Address info, continuing"));
 
         struct addrinfo* rp = NULL;
 
         for(rp = info; rp != NULL; rp = rp->ai_next)
         {
             int tmpSfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-            log(LG_DEBUG, "Creating Socket");
+            log(LG_DEBUG, const_cast<char *>("Creating Socket"));
 
             if(tmpSfd != -1)
             {
-                log(LG_DEBUG, "Created Socket successfully");
+                log(LG_DEBUG, const_cast<char *>("Created Socket successfully"));
                 if(netType == MODE_CLIENT)
                 {
                     sfd = tmpSfd;
-                    log(LG_DEBUG, "Network::Created socket successfully ready to send as client");
+                    log(LG_DEBUG, const_cast<char *>("Network::Created socket successfully ready to send as client"));
                     connection tmp = connections[id];
                     memcpy(&tmp.peer_addr, rp->ai_addr, sizeof(struct sockaddr));
                     tmp.peer_addr_len = rp->ai_addrlen;
@@ -184,7 +184,7 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
                     if(bind(tmpSfd, rp->ai_addr, rp->ai_addrlen) == 0)
                     {
                         sfd = tmpSfd;
-                        log(LG_DEBUG, "Network::CreateSocket Bound socket for listening as server");
+                        log(LG_DEBUG, const_cast<char *>("Network::CreateSocket Bound socket for listening as server"));
                         retVal = true;
                         break;
                     }
@@ -196,7 +196,7 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
     }
     else
     {
-        log(LG_ERROR, "Network::CreateSocket Failed to get Address info Error:%s", gai_strerror(ret));
+        log(LG_ERROR, const_cast<char *>("Network::CreateSocket Failed to get Address info Error:%s"), gai_strerror(ret));
     }
 
     return retVal;
@@ -205,7 +205,7 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
 void* Network::run( void* argument)
 {
     Network *net = static_cast<Network*>(argument);
-    log(LG_DEBUG, "THREAD::Network::run Added socket fd to epoll fine");
+    log(LG_DEBUG, const_cast<char *>("THREAD::Network::run Added socket fd to epoll fine"));
     struct epoll_event ev;
     struct epoll_event events[10];
     int epfd;
@@ -251,7 +251,7 @@ void* Network::run( void* argument)
                     {
                         case CONNECTION_REQUEST:
                         {
-                            log(LG_DEBUG, "Created new connection from %s:%s", host, serv);
+                            log(LG_DEBUG, const_cast<char *>("Created new connection from %s:%s"), host, serv);
                             connection tmp;
                             std::string address(host);
                             std::string port(serv);
@@ -268,7 +268,7 @@ void* Network::run( void* argument)
                                 net->nextId = net->nextId + 1;
                             }
 
-                            log(LG_DEBUG, "New connection id:%d", tmp.id);
+                            log(LG_DEBUG, const_cast<char *>("New connection id:%d"), tmp.id);
 
                             net->connections[tmp.id] = tmp;
 
@@ -300,7 +300,7 @@ void* Network::run( void* argument)
                             tmp.type = Event::EVENT_NET;
                             tmp.net.net_type = Event::EVENT_NET_CONNECTED;
                             net->addEvent(tmp);//.pushBack(tmp);
-                            log(LG_DEBUG, "THREAD::Network::run Connection accepted");
+                            log(LG_DEBUG, const_cast<char *>("THREAD::Network::run Connection accepted"));
                         }
                         break;
                         case DATA:
@@ -316,7 +316,7 @@ void* Network::run( void* argument)
                                         tmp.net.net_type = Event::EVENT_NET_CONNECT_ACK;
                                         tmp.id = net->findId(tmp.net.address, tmp.net.port);
                                         tmp.key.key_type = Event::EVENT_KEY_DOWN;
-                                        log(LG_DEBUG, "Network::run Got %c key from %s:%s", frame.body.data.key, tmp.net.address.c_str(), tmp.net.port.c_str());
+                                        log(LG_DEBUG, const_cast<char *>("Network::run Got %c key from %s:%s"), frame.body.data.key, tmp.net.address.c_str(), tmp.net.port.c_str());
                                         switch(frame.body.data.key)
                                         {
                                             case 'w':
@@ -362,7 +362,7 @@ void* Network::run( void* argument)
                             //log(LG_DEBUG, "THREAD::Network::run Got ack frame");
                         break;
                         default:
-                            log(LG_ERROR, "THREAD::Network::run Couldn't find frame type :(");
+                            log(LG_ERROR, const_cast<char *>("THREAD::Network::run Couldn't find frame type :("));
                             break;
 
                     }
@@ -372,11 +372,11 @@ void* Network::run( void* argument)
             }
             else if(nfds == 0)
             {
-                log(LG_DEBUG, "THREAD::Network::run No events");
+                log(LG_DEBUG, const_cast<char *>("THREAD::Network::run No events"));
             }
             else if(nfds == -1)
             {
-                log(LG_ERROR, "THREAD::Network::run epoll_wait returned error: %s", strerror(errno));
+                log(LG_ERROR, const_cast<char *>("THREAD::Network::run epoll_wait returned error: %s"), strerror(errno));
             }
 
         }
@@ -407,7 +407,7 @@ void Network::handleConnectionRequest(int frameNum, sockaddr_storage peer_addr, 
     address = std::string(host);
     port = std::string(serv);
 
-    log(LG_DEBUG, "Created new connection from %s:%s", host, serv);
+    log(LG_DEBUG, const_cast<char *>("Created new connection from %s:%s"), host, serv);
     connection tmp;
     tmp.frame_num = frameNum;
     tmp.peer_addr = peer_addr;
@@ -486,7 +486,7 @@ void Network::handleNetEvent(Event event)
     {
     case Event::EVENT_NET_CONNECT:
         {
-            log(LG_DEBUG, "Network::sendEvent Event::CONNECT, sending connection request to %s:%s", net.address.c_str(), net.port.c_str());
+            log(LG_DEBUG, const_cast<char *>("Network::sendEvent Event::CONNECT, sending connection request to %s:%s"), net.address.c_str(), net.port.c_str());
             if(!setup)
             {
                 event.id = nextId;
@@ -506,12 +506,12 @@ void Network::handleNetEvent(Event event)
         break;
     case Event::EVENT_NET_CONNECT_ACK:
         {
-            log(LG_DEBUG, "Network::sendEvent Event::EVENT_NET_CONNECT_ACK event received");
+            log(LG_DEBUG, const_cast<char *>("Network::sendEvent Event::EVENT_NET_CONNECT_ACK event received"));
             frame.type = CONNECTION_REQUEST_ACK;
         }
         break;
     default:
-        log(LG_ERROR, "ERROR:Network::sendEvent unknown event type");
+        log(LG_ERROR, const_cast<char *>("ERROR:Network::sendEvent unknown event type"));
     }
 
     connection to = connections[event.id];
