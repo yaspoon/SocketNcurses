@@ -137,5 +137,30 @@ Network::handle(ack)
 	end if
 	
 Network::handle(ConnectionRequest)
+
+
+Network connection logic
+Client sends connect event to network object and sets state to CONNECT
+Client Network object sends CONNECTION_REQUEST frame and creates a new client with status CONNECT (i.e the server is the client)
+Server Network ojbect receives CONNECTION_REQUEST frame
+then creates a new "client" in it's list of connections with the new clients address, port and id and status set to CONNECT
+and creates a CONNECT event with the ID in it and places it in the event queue
+Server get the CONNECT event and creates a new client and adds it to it's list of clients
+with the clients id set to the events id and status set to CONNECT
+Server creates event CONNECT_ACK with the clients ID and sends it to the server network object
+Server network object receives the event and looks up the clients id in it's table and sends a CONNECTION_REQUEST_ACK
+to the address and port of the client
+Client network object receives the CONNECTION_REQUEST_ACK and creates a CONNECT_ACK event and sends it to the client
+CLient receives the CONNECT_ACK event and then waits for a CONNECTED event
+Server sets client state to CONNECTING and creates a CONNECTED event and sends it to the server network object
+Server Network object recevies CONNECTED event and sets clients status to CONNECTING sends CONNECTION_ACCEPTED frame
+Client netowrk object receives CONNECTION_ACCEPTED frame
+creates a CONNECTED and sends it to the client
+client receives CONNECTED event and sets it's status to connected then creates a CONNECTED_ACK event and sends it to the network
+client network object receives CONNECTED_ACK event and sends a CONNECTION_ACCEPTED_ACK frame to server
+server network object receives CONNECTION_ACCEPTED_ACK frame from client network object
+sets clients status in it's list to connected and creates a CONNECTED_ACK event and sends it to the server object
+server receives CONNECTED_ACK event from client and sets clients status in it's list to connected
+
 	
 	

@@ -12,7 +12,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-client -ip 192.168.1.45 -port 34567 -debug" />
+				<Option parameters="-server -ip 192.168.1.45 -port 34567 -debug" />
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="include" />
