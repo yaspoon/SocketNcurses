@@ -1,5 +1,5 @@
 CC=g++
-LIBS= -lncurses -luuid
+LIBS= -lncurses -luuid -lpthread
 CPPFLAGS= -I./include -g
 
 OUTPUT=./obj
@@ -34,6 +34,9 @@ Server.o: Server.cpp Server.h
 	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
 	
 Timer.o: Timer.cpp Timer.h
+	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
+	
+Event.o: Event.cpp Event.h
 	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
 	
 clean:
