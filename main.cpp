@@ -40,7 +40,7 @@ void  checkForDebug(int numArgs, char *argv[])
         if(strcmp(argv[i], "-debug") == 0)
         {
             debug = true;
-            log(LG_DEBUG, "Debug enabled");
+            log(LG_DEBUG, const_cast<char *>("Debug enabled"));
         }
     }
 }
@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
     quit = false;
     debug = false;
     type_t mode = UNKNOWN;
-    string address = "";
-    string port = "";
+    string address = "127.0.0.1";
+    string port = "34567";
     int retVal = OKAY;
 
     checkForDebug(argc, argv);
@@ -62,13 +62,13 @@ int main(int argc, char* argv[])
         if( strcmp(argv[i], "-server") == 0 )
         {
             mode = SERVER;
-            log(LG_DEBUG, "Mode is now Server");
+            log(LG_DEBUG, const_cast<char *>("Mode is now Server"));
 
         }
         else if( strcmp(argv[i], "-client") == 0 )
         {
             mode = CLIENT;
-            log(LG_DEBUG, "Mode is now Client");
+            log(LG_DEBUG, const_cast<char *>("Mode is now Client"));
         }
         else if( strcmp(argv[i], "-ip") == 0 )
         {
@@ -77,16 +77,16 @@ int main(int argc, char* argv[])
                 if(strlen(argv[i+1]) <= (NET_ADDR_LEN - 1))
                 {
                     address = argv[i+1];
-                    log(LG_DEBUG, "IP set %s", address.c_str(), address.c_str(), address.c_str(), address.c_str());
+                    log(LG_DEBUG, const_cast<char *>("IP set %s"), address.c_str(), address.c_str(), address.c_str(), address.c_str());
                 }
                 else
                 {
-                    log(LG_ERROR, "Malformed IP address or your trying to use a hostname try -host instead");
+                    log(LG_ERROR, const_cast<char *>("Malformed IP address or your trying to use a hostname try -host instead"));
                 }
             }
             else
             {
-                log(LG_ERROR, "-ip flag given but no ip address given afterwards :(");
+                log(LG_ERROR, const_cast<char *>("-ip flag given but no ip address given afterwards :("));
             }
         }
         else if(strcmp(argv[i], "-port") == 0)
@@ -94,11 +94,11 @@ int main(int argc, char* argv[])
             if( (i+1) <= argc)
             {
                 port = (argv[i+1]);
-                log(LG_DEBUG, "Port set to %s", port.c_str());
+                log(LG_DEBUG, const_cast<char *>("Port set to %s"), port.c_str());
             }
             else
             {
-                log(LG_ERROR, "-port flag specified but no port given afterwards :(");
+                log(LG_ERROR, const_cast<char *>("-port flag specified but no port given afterwards :("));
             }
         }
 
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 
     if(mode == UNKNOWN)
     {
-        log(LG_ERROR, "No mode chosen exiting");
+        log(LG_ERROR, const_cast<char *>("No mode chosen exiting"));
         retVal = ERROR;
     }
     else
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
             }
             else
             {
-                log(LG_ERROR, "Somehow got into main loop with a bad mode, quiting~!");
+                log(LG_ERROR, const_cast<char *>("Somehow got into main loop with a bad mode, quiting~!"));
                 quit = true;
             }
     }
