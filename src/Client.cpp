@@ -13,99 +13,164 @@ Client::Client()
 {
     Server_Address = "127.0.0.1";
     Server_Port = "34567";
-    uuid_generate(Client_ID);
-    char id[37];
-    uuid_unparse(Client_ID, id);
-    log(LG_DEBUG, "Client ID:%s", id);
-    this->connected = false;
 }
 
 Client::Client(std::string address, std::string port)
 {
     Server_Address = address;
     Server_Port = port;
-    uuid_generate(Client_ID);
-    char id[37];
-    uuid_unparse(Client_ID, id);
-    log(LG_DEBUG, "Client ID:%s", id);
-    this->connected = false;
 }
 
 Client::Client(std::string port)
 {
     Server_Address = "127.0.0.1";
     Server_Port = port;
-    uuid_generate(Client_ID);
-    char id[37];
-    uuid_unparse(Client_ID, id);
-    log(LG_DEBUG, "Client ID:%s", id);
-    this->connected = false;
 }
 
 Client::~Client()
 {
-    uuid_clear(Client_ID);
 }
 
-void Client::run()
+bool Client::connect()
 {
-    net = Network(Server_Address.c_str(), Server_Port.c_str(), MODE_CLIENT);
-    net.Setup();
-    bool quit = false;
-    char data;
-    Timer timer;
+    bool retVal = false;
     int connectCount = 0;
-
-    log(LG_DEBUG, "Connecting");
+    Timer timer;
 
     Event tmp;
-    tmp.type = Event::CONNECT;
+    tmp.type = Event::EVENT_NET;
+    tmp.net.net_type = Event::EVENT_NET_CONNECT;
+    tmp.net.address = Server_Address;
+    tmp.net.port = Server_Port;
+
 
     net.sendEvent(tmp);
     timer.start();
-    while(!quit)
+
+    while(connectCount < CONNECTION_ATTEMPTS && !retVal)
     {
-        if(!connected)
+
+        if(net.getStatus() != Event::EVENT_NET_CONNECTED)
         {
-            if(timer.getTime() > 2000)
+            if(timer.getTime() > CONNECTION_TIMEOUT)
             {
-                if(connectCount < 5)
-                {
-                    log(LG_DEBUG, "Failed to receive connection after 2 seconds attempting again");
-                    net.sendEvent(tmp);
-                    connectCount++;
-                    timer.stop();
-                    timer.start();
-                }
-                else
-                {
-                    log(LG_ERROR, "Failed to connect to server after 5 attempts exiting");
-                    quit = true;
-                }
+                //log(LG_DEBUG, "Failed to receive connection after 2 seconds attempting again");
+                net.sendEvent(tmp);
+                connectCount++;
+                timer.stop();
+                timer.start();
+
             }
             else
             {
                 Event tmp = net.getEvent();
-                if(tmp.type == Event::CONNECTED)
+                switch(tmp.type)
                 {
-                    log(LG_DEBUG, "Connected to server");
-                    this->connected = true;
+                case Event::EVENT_NET:
+
+                    if(tmp.net.net_type == Event::EVENT_NET_CONNECT_ACK)
+                    {
+                        Server_ID = tmp.id;
+                        retVal = true;
+                        log(LG_DEBUG, const_cast<char *>("Client::run got EVENT_CONNECT_ACK"));
+                    }
+                break;
                 }
             }
         }
-        else
+    }
+
+    return retVal;
+}
+
+void Client::run()
+{
+    bool quit = false;
+    char data;
+
+    log(LG_DEBUG, const_cast<char *>("Connecting to %s:%s"), Server_Address.c_str(), Server_Port.c_str());
+    if(connect())
+    {
+        initscr();
+        cbreak();
+        nodelay(stdscr, true);
+        noecho();
+        keypad(stdscr, TRUE);
+
+        Timer timer;
+
+        while(!quit)
         {
-            data = getc(stdin);
+            timer.stop();
+            timer.start();
+
+            Event event = net.getEvent();
+            handleEvent(event);
+            data = getch();
+            if(data != ERR)
+            {
+                switch(data)
+                {
+                    case 'w':
+                        sendKey(Event::EVENT_KEY_DOWN, Event::KEY_W);
+                        break;
+                    case 'a':
+                        sendKey(Event::EVENT_KEY_DOWN, Event::KEY_A);
+                        break;
+                    case 's':
+                        sendKey(Event::EVENT_KEY_DOWN, Event::KEY_S);
+                        break;
+                    case 'd':
+                        sendKey(Event::EVENT_KEY_DOWN, Event::KEY_D);
+                        break;
+                }
+            }
+            clear();
+            mvprintw(player.y, player.x, "%c", player.character);
+
+            refresh();
+
             if(data == 'q')
             {
                 quit = true;
             }
-            else if(data >= 'a' && data <= 'z')
+
+            long int time = timer.getTime();
+            if(time < (1000/MAXFPS))
             {
-                log(LG_DEBUG, "Sending %c", data);
-                net.sendData(data);
+                usleep(((1000/60) - time) * 1000);
             }
         }
+
+        endwin();
+    }
+    else
+    {
+        log(LG_ERROR, const_cast<char *>("Failed to connect to %s:%s after %d attemps"), Server_Address.c_str(), Server_Port.c_str(), CONNECTION_ATTEMPTS);
+    }
+}
+
+void Client::sendKey(Event::Event_Key_type type, Event::Key_Sym sym)
+{
+    Event key;
+    key.id = Server_ID;
+    key.type = Event::EVENT_KEY;
+    key.key.key_type = type;
+    key.key.sym = sym;
+    net.sendEvent(key);
+}
+
+void Client::handleEvent(Event event)
+{
+    switch(event.type)
+    {
+        case Event::EVENT_GAMEUPDATE:
+        {
+            player.character = event.update.character;
+            player.x = event.update.x;
+            player.y = event.update.y;
+        }
+        break;
     }
 }
 
