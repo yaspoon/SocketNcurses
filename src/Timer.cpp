@@ -19,11 +19,10 @@ void Timer::start()
     {
         started = true;
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &startTime);
-        log(LG_DEBUG, "Started timer at %d second %d nanoseconds", startTime.tv_sec, startTime.tv_nsec);
     }
     else
     {
-        log(LG_DEBUG, "Timer already started at %d second %d nanoseconds", startTime.tv_sec, startTime.tv_nsec);
+        log(LG_DEBUG, const_cast<char *>("Timer already started at %d second %d nanoseconds"), startTime.tv_sec, startTime.tv_nsec);
     }
 }
 
@@ -41,11 +40,11 @@ void Timer::pause()
     {
         paused = true;
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &pauseTime);
-        log(LG_DEBUG, "Paused timer at %d second %d nanoseconds", pauseTime.tv_sec, pauseTime.tv_nsec);
+        log(LG_DEBUG, const_cast<char *>("Paused timer at %d second %d nanoseconds"), pauseTime.tv_sec, pauseTime.tv_nsec);
     }
     else
     {
-        log(LG_DEBUG, "Timer already Paused at %d second %d nanoseconds", pauseTime.tv_sec, pauseTime.tv_nsec);
+        log(LG_DEBUG, const_cast<char *>("Timer already Paused at %d second %d nanoseconds"), pauseTime.tv_sec, pauseTime.tv_nsec);
     }
 }
 
@@ -89,5 +88,5 @@ void Timer::printTime()
 {
     struct timespec tmp;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tmp);
-    log(LG_DEBUG, "Time %d seconds, %d nanoseconds", tmp.tv_sec, tmp.tv_nsec );
+    log(LG_DEBUG, const_cast<char *>("Time %d seconds, %d nanoseconds"), tmp.tv_sec, tmp.tv_nsec );
 }
