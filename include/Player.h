@@ -7,11 +7,11 @@ class Player
     public:
         Player();
         virtual ~Player();
-    protected:
-    private:
         int x;
         int y;
         char character;
+    protected:
+    private:
 };
 
 #endif // PLAYER_H
