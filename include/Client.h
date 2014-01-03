@@ -18,17 +18,21 @@ class Client
         virtual ~Client();
 
         void run();
-        bool connectToServer();
-        int CreateSocket(std::string address, std::string port);
     protected:
     private:
+        bool connect();
         std::string Server_Address;
         std::string Server_Port;
-        uuid_t Client_ID;
-        uuid_t Server_ID;
+        int Server_ID;
         Network net;
-        bool connected;
+        Player player;
 
+        const static int CONNECTION_TIMEOUT = 2000; //2 seconds between conenction attempts
+        const static int CONNECTION_ATTEMPTS = 5; //Amount of connection attempts before it gives up
+        const static int MAXFPS = 60;
+
+        void sendKey(Event::Event_Key_type type, Event::Key_Sym sym);
+        void handleEvent(Event event);
 
 };
 
