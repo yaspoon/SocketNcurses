@@ -2,36 +2,59 @@
 #define NETWORK_H
 
 #include <string>
-#include <uuid/uuid.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <map>
 #include "LinkedList.h"
-
+#include "uuid/uuid.h"
 #include "Event.h"
+#include "Player.h"
 
 #include <pthread.h>
 
-typedef enum
+
+enum DATA_type
+{
+    DATA_KEY_DOWN = 0,
+    DATA_KEY_UP,
+    DATA_GAMEUPDATE
+};
+
+typedef struct
+{
+    DATA_type data_type;
+    char key;
+    int x;
+    int y;
+} Data;
+
+enum NET_Type
 {
     ACK = 0,
     CONNECTION_REQUEST,
+    CONNECTION_REQUEST_ACK,
     CONNECTION_ACCEPTED,
+    CONNECTION_ACCEPTED_ACK,
     DATA
 
-} NET_Type;
+};
+
+union NET_Frame_Body
+{
+    Data data;
+    //time_t ping;
+};
 
 struct NET_Frame
 {
     int num;
     NET_Type type;
-    uuid_t id;
-    char data;
+    NET_Frame_Body body;
 };
 
-typedef enum NET_Mode
+enum NET_Mode
 {
     MODE_SERVER = 0,
     MODE_CLIENT
@@ -39,9 +62,13 @@ typedef enum NET_Mode
 
 typedef struct
 {
-    int frame_num;
+    Event::Event_Net_type status;
+    unsigned int frame_num;
+    std::string address;
+    std::string port;
     sockaddr_storage peer_addr;
     socklen_t peer_addr_len;
+    int id;
 }connection;
 
 class Network
@@ -50,32 +77,38 @@ class Network
         Network();
         Network(std::string address, std::string port, NET_Mode mode);
         virtual ~Network();
-        void sendData(char data);
         void sendEvent(Event event);
         Event getEvent(void);
+        Event::Event_Net_type getStatus();
+        void setStatus(Event::Event_Net_type newStatus);
 
-        bool Setup();
+        bool Setup(std::string address, std::string port, NET_Mode mode, int id = 0);
     protected:
     private:
-        bool listening;
+        int sfd;
+        int nextId;
+        std::map<int, connection> connections;
+        //LinkedList<Event> eventList;
+        Event eventList;
+        Event::Event_Net_type status;
+        bool setup;
+
         pthread_t runThread;
-        std::string address;
-        std::string port;
-        NET_Mode mode;
+        pthread_mutex_t mutex;
         LinkedList<struct NET_Frame> frameQueue;
 
-        static bool SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_t peer_len);
-        static bool sendACK(int fd, int ack_num, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
-        static int ReceiveFrame(int fd, NET_Frame *frame, sockaddr_storage *peer, socklen_t *peer_len);
-        int CreateSocket(std::string address, std::string port, NET_Mode sockType, struct sockaddr_storage *peer, socklen_t *peer_len );
-        static void* run(void *arguments);
-        static void handleConnectionRequest(uuid_t id, int frameNum, sockaddr_storage peer_addr, socklen_t peer_addr_len);
+        bool SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_t peer_len);
+        bool sendACK(int fd, int ack_num, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
+        int ReceiveFrame(int fd, NET_Frame *frame, sockaddr_storage *peer, socklen_t *peer_len);
+        bool CreateSocket(std::string address, std::string port, NET_Mode sockType, int id = 0);
+        static void* run(void *argument);
+        void handleConnectionRequest( int frameNum, sockaddr_storage peer_addr, socklen_t peer_addr_len);
+        size_t sizeofFrame(NET_Frame frame);
+        void handleNetEvent(Event event);
+        void handleKeyEvent(Event event);
+        void handleGameUpdateEvent(Event event);
+        int findId(std::string address, std::string port);
+        void addEvent(Event event);
 };
-
-static int sfd;
-static uuid_t id;
-static std::map<std::string, connection> connections;
-static connection client;
-static LinkedList<Event> eventList;
 
 #endif // NETWORK_H
