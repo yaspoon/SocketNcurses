@@ -28,28 +28,27 @@ class Server
     private:
         std::string SV_Address; //Servers address to bind to
         std::string SV_Port;
-        uuid_t SV_ID;
 
         struct SV_Client
         {
-            bool connected;
-            uuid_t id;
+            Event::Event_Net_type status;
             Player CL_player;
-            struct sockaddr_storage CL_addr;
-            socklen_t CL_addr_len;
             int frameNo;
             int ackNo;
             int nextFrameNo;
+            int id;
 
             //Insert socket stuff here....
         };
 
-        SV_Client clients[32];
-        int clientCount;
+        std::map<int, SV_Client> clients;
         Network net;
 
-        bool addClient(uuid_t id, struct sockaddr_storage peer, socklen_t peer_len, int initialFrameNum);
+        bool addClient(std::string address, std::string port, int id);
         bool handleFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
+        void handleNetEvent(Event event);
+        void handleKeyEvent(Event event);
+        void sendUpdate();
 };
 
 #endif // SERVER_H
