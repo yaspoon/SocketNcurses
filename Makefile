@@ -39,6 +39,9 @@ Timer.o: Timer.cpp Timer.h
 Event.o: Event.cpp Event.h
 	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
 	
+GameState.o: GameState.cpp GameState.h
+	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
+	
 clean:
 	rm -rf $(OBJS) $(EXEOUTPUT)/$(EXE)
 	
