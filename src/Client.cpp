@@ -126,7 +126,18 @@ void Client::run()
                 }
             }
             clear();
-            mvprintw(player.y, player.x, "%c", player.character);
+
+            std::vector<Player> players = state.getPlayers();
+            //mvprintw(1, 1, "Num players %d", players.size());
+
+            for(int i = 0; i < players.size(); i++)
+            {
+                Player player = players[i];
+
+                mvprintw(player.y, player.x, "%c", player.character);
+
+
+            }
 
             refresh();
 
@@ -166,9 +177,29 @@ void Client::handleEvent(Event event)
     {
         case Event::EVENT_GAMEUPDATE:
         {
-            player.character = event.update.character;
-            player.x = event.update.x;
-            player.y = event.update.y;
+            std::vector<Ent> entities;
+
+            for(int i = 0; i < event.update.entities.size(); i++)
+            {
+                Entity ent;
+                    switch(event.update.entities[i].ent_type)
+                    {
+                        case ENT_UNKNOWN:
+                        break;
+                        case ENT_PLAYER:
+                        {
+                            Player tmpPlayer(event.update.entities[i]);
+                            ent = tmpPlayer;
+                        }
+                            break;
+                        default:
+                        break;
+
+                    }
+                entities.push_back(event.update.entities[i]);
+            }
+
+            state.setGameUpdate(entities);
         }
         break;
     }

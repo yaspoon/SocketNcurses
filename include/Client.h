@@ -8,6 +8,7 @@
 #include <uuid/uuid.h>
 #include "Player.h"
 #include "Network.h"
+#include "GameState.h"
 
 class Client
 {
@@ -25,7 +26,7 @@ class Client
         std::string Server_Port;
         int Server_ID;
         Network net;
-        Player player;
+        GameState state;
 
         const static int CONNECTION_TIMEOUT = 2000; //2 seconds between conenction attempts
         const static int CONNECTION_ATTEMPTS = 5; //Amount of connection attempts before it gives up
