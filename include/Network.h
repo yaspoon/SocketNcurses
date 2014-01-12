@@ -11,6 +11,7 @@
 #include "uuid/uuid.h"
 #include "Event.h"
 #include "Player.h"
+#include "Entity.h"
 
 #include <pthread.h>
 
@@ -25,9 +26,9 @@ enum DATA_type
 typedef struct
 {
     DATA_type data_type;
+    int numEnts;
     char key;
-    int x;
-    int y;
+    Ent ents[8];
 } Data;
 
 enum NET_Type

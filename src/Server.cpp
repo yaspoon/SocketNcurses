@@ -3,6 +3,7 @@
 #include <string.h>
 #include "Network.h"
 #include <sys/epoll.h>
+#include <typeinfo>
 
 Server::Server()
 {
@@ -67,6 +68,8 @@ bool Server::addClient(std::string address, std::string port, int id)
         newCLient.id = id;
         log(LG_DEBUG, const_cast<char *>("Server::addClient Created Client[%d]"), id);
 
+        state.addPlayer(id);
+
         clients[id] = newCLient;
 
         retVal = true;
@@ -103,20 +106,36 @@ void Server::handleKeyEvent(Event event)
             switch(event.key.sym)
             {
                 case Event::KEY_A:
-                    clients[event.id].CL_player.x = clients[event.id].CL_player.x - 1;
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.x=%d"), event.id, clients[event.id].CL_player.x);
+                {
+                    Player thePlayer = state.getPlayer(event.id);
+                    thePlayer.x -= 1;
+                    state.setPlayer(event.id, thePlayer);
+                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.x=%d"), event.id, thePlayer.x);
+                }
                 break;
                 case Event::KEY_W:
-                    clients[event.id].CL_player.y = clients[event.id].CL_player.y - 1;
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.y=%d"), event.id, clients[event.id].CL_player.y);
+                {
+                    Player thePlayer = state.getPlayer(event.id);
+                    thePlayer.y -= 1;
+                    state.setPlayer(event.id, thePlayer);
+                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.y=%d"), event.id, thePlayer.y);
+                }
                 break;
                 case Event::KEY_S:
-                    clients[event.id].CL_player.y = clients[event.id].CL_player.y + 1;
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.y=%d"), event.id, clients[event.id].CL_player.y);
+                {
+                    Player thePlayer = state.getPlayer(event.id);
+                    thePlayer.y += 1;
+                    state.setPlayer(event.id, thePlayer);
+                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.y=%d"), event.id, thePlayer.y);
+                }
                 break;
                 case Event::KEY_D:
-                    clients[event.id].CL_player.x = clients[event.id].CL_player.x + 1;
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.x=%d"), event.id, clients[event.id].CL_player.x);
+                {
+                    Player thePlayer = state.getPlayer(event.id);
+                    thePlayer.x += 1;
+                    state.setPlayer(event.id, thePlayer);
+                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.x=%d"), event.id, thePlayer.x);
+                }
                 break;
             }
         }
@@ -129,13 +148,19 @@ void Server::sendUpdate()
     Event update;
     update.type = Event::EVENT_GAMEUPDATE;
 
+    std::vector<Ent> entities = state.getGameUpdate();
+
+    for(int i = 0; i < entities.size(); i++)
+    {
+        update.update.entities.push_back(entities[i]);
+    }
+
+    //log(LG_DEBUG, "Update event entities %d", update.update.entities.size());
+
     for(int i = 0; i < clients.size(); i++)
     {
-        //log(LG_DEBUG, "Sending update to Client[%d].id:%d c:%c x:%d y:%d", i, clients[i].id, clients[i].CL_player.character, clients[i].CL_player.x, clients[i].CL_player.y);
+        //log(LG_DEBUG, "Sending update to Client[%d].id:%d", i, clients[i].id);
         update.id = clients[i].id;
-        update.update.x = clients[i].CL_player.x;
-        update.update.y = clients[i].CL_player.y;
-        update.update.character = clients[i].CL_player.character;
         net.sendEvent(update);
     }
 }

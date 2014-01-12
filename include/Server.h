@@ -12,6 +12,8 @@
 #include "Player.h"
 #include "Network.h"
 
+#include "GameState.h"
+
 
 
 class Server
@@ -29,10 +31,11 @@ class Server
         std::string SV_Address; //Servers address to bind to
         std::string SV_Port;
 
+        GameState state;
+
         struct SV_Client
         {
             Event::Event_Net_type status;
-            Player CL_player;
             int frameNo;
             int ackNo;
             int nextFrameNo;

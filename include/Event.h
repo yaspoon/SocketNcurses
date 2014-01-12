@@ -4,6 +4,8 @@
 #include <string>
 #include <uuid/uuid.h>
 #include "Player.h"
+#include "Event.h"
+#include <vector>
 
 
 class Event
@@ -59,9 +61,7 @@ class Event
 
         typedef struct
         {
-            int x;
-            int y;
-            char character;
+            std::vector<Ent> entities;
         } GameUpdate_Event;
 
         Event_type type;

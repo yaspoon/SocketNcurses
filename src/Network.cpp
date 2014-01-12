@@ -64,7 +64,7 @@ size_t Network::sizeofFrame(NET_Frame frame)
         retVal = header;
         break;
     case CONNECTION_REQUEST:
-        retVal = header;
+        retVal = header + body;
         break;
     case CONNECTION_REQUEST_ACK:
             retVal = header;
@@ -73,7 +73,29 @@ size_t Network::sizeofFrame(NET_Frame frame)
         retVal = header;
         break;
     case DATA:
-        retVal = header + body;//sizeof(frame.body.data);
+    {
+        switch(frame.body.data.data_type)
+        {
+            case DATA_GAMEUPDATE:
+            {
+                retVal = header + body;
+            }
+            break;
+            case DATA_KEY_DOWN:
+            {
+                retVal = header + body;
+            }
+            break;
+            case DATA_KEY_UP:
+            {
+                retVal = header + body;
+            }
+            break;
+            default:
+                retVal = header + body;
+        }
+
+    }
         break;
     default:
         retVal = header + body;
@@ -86,6 +108,7 @@ bool Network::SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_
 {
     bool retVal = false;
     size_t frameSize = sizeofFrame(frame);
+
 
     if(sendto(fd, &frame, frameSize, 0, (struct sockaddr*) &peer, peer_len) == frameSize)
     {
@@ -101,7 +124,7 @@ bool Network::SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Network::SendFrame Failed to write frame"));
+        log(LG_ERROR, const_cast<char *>("Network::SendFrame Failed to write frame ERROR:%s"), strerror(errno));
     }
 
 
@@ -343,10 +366,12 @@ void* Network::run( void* argument)
                                     case DATA_GAMEUPDATE:
                                     {
                                         tmp.type = Event::EVENT_GAMEUPDATE;
-                                        tmp.id = net->findId(std::string(host), std::string(serv));
-                                        tmp.update.x = frame.body.data.x;
-                                        tmp.update.y = frame.body.data.y;
-                                        tmp.update.character = frame.body.data.key;
+                                        //log(LG_DEBUG, "numEnts:%d", frame.body.data.numEnts);
+                                        for(int i = 0; i < frame.body.data.numEnts; i++)
+                                        {
+                                            //log(LG_DEBUG, "entType:%d", frame.body.data.ents[i].ent_type);
+                                            tmp.update.entities.push_back(frame.body.data.ents[i]);
+                                        }
                                         //log(LG_DEBUG, "Network::run got game update x:%d y:%d char:%c", tmp.update.x, tmp.update.y, tmp.update.character);
 
                                     }
@@ -487,10 +512,11 @@ void Network::handleNetEvent(Event event)
     case Event::EVENT_NET_CONNECT:
         {
             log(LG_DEBUG, const_cast<char *>("Network::sendEvent Event::CONNECT, sending connection request to %s:%s"), net.address.c_str(), net.port.c_str());
-            if(!setup)
+            //if(!setup)
             {
-                event.id = nextId;
-                nextId++;
+                log(LG_DEBUG, "Client ID set to %d", nextId);
+                event.id = 0;//nextId;
+                //nextId++;
             }
 
             Setup(net.address, net.port, MODE_CLIENT, event.id);
@@ -547,19 +573,18 @@ void Network::handleGameUpdateEvent(Event event)
     NET_Frame frame;
     frame.type = DATA;
     frame.num = 0;
-
     frame.body.data.data_type = DATA_GAMEUPDATE;
-    frame.body.data.x = event.update.x;
-    frame.body.data.y = event.update.y;
-    frame.body.data.key = event.update.character;
+
+    int size = event.update.entities.size() > 10 ? 10 : event.update.entities.size();
+
+    frame.body.data.numEnts = size;
+
+    for(int i = 0; i < size; i++)
+    {
+        frame.body.data.ents[i] = event.update.entities[i];
+    }
 
     connection to = connections[event.id];
-
-    char host[NI_MAXHOST];
-    char serv[NI_MAXSERV];
-
-    getnameinfo((sockaddr*)&to.peer_addr, to.peer_addr_len, host, sizeof(host), serv, sizeof(serv), NI_NUMERICHOST | NI_NUMERICSERV);
-    //log(LG_DEBUG, "Network::handleGameUpdate Sending x:%d y%d to %s:%s", frame.body.data.x, frame.body.data.y, host, serv);
 
     SendFrame(sfd, frame, to.peer_addr, to.peer_addr_len);
 }
@@ -590,6 +615,10 @@ void Network::addEvent(Event event)
     {
         eventList = event;
         pthread_mutex_unlock(&mutex);
+    }
+    else
+    {
+        log(LG_DEBUG, const_cast<char *>("Failed to lock mutex :("));
     }
 
 }
