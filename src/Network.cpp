@@ -518,7 +518,7 @@ void Network::handleNetEvent(Event event)
             log(LG_DEBUG, const_cast<char *>("Network::sendEvent Event::CONNECT, sending connection request to %s:%s"), net.address.c_str(), net.port.c_str());
             //if(!setup)
             {
-                log(LG_DEBUG, "Client ID set to %d", nextId);
+                log(LG_DEBUG, const_cast<char *>("Client ID set to %d"), nextId);
                 event.id = 0;//nextId;
                 //nextId++;
             }

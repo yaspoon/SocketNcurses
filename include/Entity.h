@@ -34,7 +34,7 @@ class Entity
         Entity();
         virtual Ent toEnt()
         {
-            log(LG_DEBUG, "Entity::toEnt");
+            log(LG_DEBUG, const_cast<char *>("Entity::toEnt"));
             Ent tmp;
             tmp.ent_type = ENT_UNKNOWN;
             return tmp;

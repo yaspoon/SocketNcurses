@@ -34,7 +34,7 @@ int NetworkStatistics::getBytes(stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, "Failed to lock");
+        log(LG_ERROR, const_cast<char *>("Failed to lock"));
     }
 
     return bytes;
@@ -65,7 +65,7 @@ float NetworkStatistics::getKibibytes(stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, "Failed to lock");
+        log(LG_ERROR, const_cast<char *>("Failed to lock"));
     }
 
     return kibibytes;
@@ -102,7 +102,7 @@ float NetworkStatistics::getMebibytes(stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, "Failed to lock");
+        log(LG_ERROR, const_cast<char *>("Failed to lock"));
     }
 
     return mebibytes;
@@ -115,7 +115,7 @@ void NetworkStatistics::addBytes(int bytes, stat_mode mode)
         switch(mode)
         {
             case STAT_UNKNOWN:
-                log(LG_ERROR,"NetworkStatistics::addbytes,Mode is unknown so this does nothing..");
+                log(LG_ERROR,const_cast<char *>("NetworkStatistics::addbytes,Mode is unknown so this does nothing.."));
             break;
             case STAT_IN:
             {
@@ -164,7 +164,7 @@ void NetworkStatistics::addBytes(int bytes, stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, "Failed to lock");
+        log(LG_ERROR, const_cast<char *>("Failed to lock"));
     }
 }
 
@@ -173,7 +173,7 @@ void NetworkStatistics::addKibibytes(int kibibytes, stat_mode mode)
     switch(mode)
     {
         case STAT_UNKNOWN:
-            log(LG_ERROR,"NetworkStatistics::addkibibytes,Mode is unknown so this does nothing..");
+            log(LG_ERROR,const_cast<char *>("NetworkStatistics::addkibibytes,Mode is unknown so this does nothing.."));
         break;
         case STAT_IN:
         {
@@ -226,7 +226,7 @@ void NetworkStatistics::addMebibytes(int mebibytes, stat_mode mode)
     switch(mode)
     {
         case STAT_UNKNOWN:
-            log(LG_ERROR,"NetworkStatistics::addMebibytes,Mode is unknown so this does nothing..");
+            log(LG_ERROR, const_cast<char *>("NetworkStatistics::addMebibytes,Mode is unknown so this does nothing.."));
             break;
         case STAT_IN:
             inMebibytes += mebibytes;
