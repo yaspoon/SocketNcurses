@@ -13,6 +13,7 @@
 #include "Network.h"
 
 #include "GameState.h"
+#include "Timer.h"
 
 
 
@@ -30,6 +31,7 @@ class Server
     private:
         std::string SV_Address; //Servers address to bind to
         std::string SV_Port;
+        const static int MAXFPS = 60;
 
         GameState state;
 

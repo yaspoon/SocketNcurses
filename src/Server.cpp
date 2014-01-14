@@ -34,9 +34,12 @@ returnCodes_t Server::run()
     net.Setup(SV_Address, SV_Port, MODE_SERVER);
 
     char data;
+    Timer timer;
 
     while(true)
     {
+        timer.stop();
+        timer.start();
 
         Event tmp = net.getEvent();
 
@@ -51,6 +54,12 @@ returnCodes_t Server::run()
         }
 
         sendUpdate();
+
+        long int time = timer.getTime();
+        if(time < (1000/MAXFPS))
+        {
+            usleep(((1000/MAXFPS) - time) * 1000);
+        }
     }
 }
 
