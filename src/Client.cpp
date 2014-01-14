@@ -139,6 +139,8 @@ void Client::run()
 
             }
 
+            printNetStats();
+
             refresh();
 
             if(data == 'q')
@@ -149,7 +151,7 @@ void Client::run()
             long int time = timer.getTime();
             if(time < (1000/MAXFPS))
             {
-                usleep(((1000/60) - time) * 1000);
+                usleep(((1000/MAXFPS) - time) * 1000);
             }
         }
 
@@ -203,4 +205,22 @@ void Client::handleEvent(Event event)
         }
         break;
     }
+}
+
+void Client::printNetStats()
+{
+    NetworkStatistics stats = net.getStatistics();
+
+    float out = stats.getMebibytes(STAT_OUT);
+    float in = stats.getMebibytes(STAT_IN);
+    int maxX;
+    int maxY;
+
+    getmaxyx(stdscr, maxY, maxX);
+
+    mvprintw(maxY - 2, 0, "OUT:%f MB's", out);
+    mvprintw(maxY - 1, 0, "IN:%f MB's", in);
+
+
+
 }

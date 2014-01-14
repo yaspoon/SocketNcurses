@@ -35,6 +35,8 @@ class Client
         void sendKey(Event::Event_Key_type type, Event::Key_Sym sym);
         void handleEvent(Event event);
 
+        void printNetStats();
+
 };
 
 #endif // CLIENT_H
