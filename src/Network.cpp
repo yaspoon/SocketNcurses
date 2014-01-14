@@ -109,6 +109,8 @@ bool Network::SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_
     bool retVal = false;
     size_t frameSize = sizeofFrame(frame);
 
+    statistics.addBytes(frameSize, STAT_OUT);
+
 
     if(sendto(fd, &frame, frameSize, 0, (struct sockaddr*) &peer, peer_len) == frameSize)
     {
@@ -257,6 +259,8 @@ void* Network::run( void* argument)
                     socklen_t peer_addr_len = sizeof(struct sockaddr_storage);
 
                     int nread = recvfrom(events[i].data.fd, &frame, sizeof(frame), 0, (struct sockaddr*)&peer_addr, &peer_addr_len);
+
+                    net->statistics.addBytes(nread, STAT_IN);
 
                     char host[NI_MAXHOST];
                     char serv[NI_MAXSERV];
@@ -621,4 +625,9 @@ void Network::addEvent(Event event)
         log(LG_DEBUG, const_cast<char *>("Failed to lock mutex :("));
     }
 
+}
+
+NetworkStatistics Network::getStatistics()
+{
+    return statistics;
 }

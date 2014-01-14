@@ -12,6 +12,7 @@
 #include "Event.h"
 #include "Player.h"
 #include "Entity.h"
+#include "NetworkStatistics.h"
 
 #include <pthread.h>
 
@@ -84,6 +85,7 @@ class Network
         void setStatus(Event::Event_Net_type newStatus);
 
         bool Setup(std::string address, std::string port, NET_Mode mode, int id = 0);
+        NetworkStatistics getStatistics();
     protected:
     private:
         int sfd;
@@ -97,6 +99,7 @@ class Network
         pthread_t runThread;
         pthread_mutex_t mutex;
         LinkedList<struct NET_Frame> frameQueue;
+        NetworkStatistics statistics;
 
         bool SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_t peer_len);
         bool sendACK(int fd, int ack_num, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
