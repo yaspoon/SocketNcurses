@@ -41,7 +41,13 @@ Event.o: Event.cpp Event.h
 	
 GameState.o: GameState.cpp GameState.h
 	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
+
+NetworkStatistics.o: NetworkStatistics.cpp NetworkStatistics.h
+	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
 	
+Entity.o: Entity.cpp Entity.h
+	$(CC) -c -o $(OUTPUT)/$@ $< $(LIBS) $(CPPFLAGS)
+		
 clean:
 	rm -rf $(OBJS) $(EXEOUTPUT)/$(EXE)
 	
