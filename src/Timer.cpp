@@ -18,7 +18,7 @@ void Timer::start()
     if(!started)
     {
         started = true;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &startTime);
+        clock_gettime(CLOCK_REALTIME, &startTime);
     }
     else
     {
@@ -39,7 +39,7 @@ void Timer::pause()
     if(!paused)
     {
         paused = true;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &pauseTime);
+        clock_gettime(CLOCK_REALTIME, &pauseTime);
         log(LG_DEBUG, const_cast<char *>("Paused timer at %d second %d nanoseconds"), pauseTime.tv_sec, pauseTime.tv_nsec);
     }
     else
@@ -72,7 +72,7 @@ long int Timer::getTime()
 
         struct timespec tmp;
 
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tmp);
+        clock_gettime(CLOCK_REALTIME, &tmp);
 
         tmp.tv_sec = tmp.tv_sec - startTime.tv_sec;
         tmp.tv_nsec = tmp.tv_nsec - startTime.tv_nsec;
@@ -87,6 +87,6 @@ long int Timer::getTime()
 void Timer::printTime()
 {
     struct timespec tmp;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tmp);
+    clock_gettime(CLOCK_REALTIME, &tmp);
     log(LG_DEBUG, const_cast<char *>("Time %d seconds, %d nanoseconds"), tmp.tv_sec, tmp.tv_nsec );
 }
