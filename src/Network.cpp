@@ -579,7 +579,7 @@ void Network::handleGameUpdateEvent(Event event)
     frame.num = 0;
     frame.body.data.data_type = DATA_GAMEUPDATE;
 
-    int size = event.update.entities.size() > 10 ? 10 : event.update.entities.size();
+    int size = event.update.entities.size() > 8 ? 8 : event.update.entities.size();
 
     frame.body.data.numEnts = size;
 
