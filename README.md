@@ -30,8 +30,11 @@ Moving around in the game:
 On the clients terminal once connected you can move your character around using
 
 w - move character up
+
 a - move character left
+
 s - move character down
+
 d - move character right
 
 Notes:
