@@ -5,6 +5,8 @@
 
 #include <string.h>
 #include <ncurses.h>
+#include "ReadBuffer.h"
+#include "WriteBuffer.h"
 
 
 
@@ -179,29 +181,8 @@ void Client::handleEvent(Event event)
     {
         case Event::EVENT_GAMEUPDATE:
         {
-            std::vector<Ent> entities;
-
-            for(int i = 0; i < event.update.entities.size(); i++)
-            {
-                Entity ent;
-                    switch(event.update.entities[i].ent_type)
-                    {
-                        case ENT_UNKNOWN:
-                        break;
-                        case ENT_PLAYER:
-                        {
-                            Player tmpPlayer(event.update.entities[i]);
-                            ent = tmpPlayer;
-                        }
-                            break;
-                        default:
-                        break;
-
-                    }
-                entities.push_back(event.update.entities[i]);
-            }
-
-            state.setGameUpdate(entities);
+		ReadBuffer readBuffer(event.stream);
+            state.serialise(readBuffer);
         }
         break;
     }
