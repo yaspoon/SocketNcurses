@@ -1,9 +1,14 @@
 #include "Server.h"
 
 #include <string.h>
+#include <time.h>
+#include <stdlib.h>
 #include "Network.h"
 #include <sys/epoll.h>
 #include <typeinfo>
+
+#include "Buffer.h"
+#include "WriteBuffer.h"
 
 Server::Server()
 {
@@ -30,7 +35,6 @@ Server::~Server()
 
 returnCodes_t Server::run()
 {
-    //net = Network(SV_Address, SV_Port, MODE_SERVER);
     net.Setup(SV_Address, SV_Port, MODE_SERVER);
 
     char data;
@@ -154,24 +158,22 @@ void Server::handleKeyEvent(Event event)
 
 void Server::sendUpdate()
 {
-    Event update;
-    update.type = Event::EVENT_GAMEUPDATE;
+	WriteBuffer update;
+	update.writeEnum(Event::EVENT_GAMEUPDATE);
 
-    std::vector<Ent> entities = state.getGameUpdate();
+	log(LG_DEBUG, const_cast<char *>("STUB: Server::sendUpdate isn't implemented!"));
 
-    for(int i = 0; i < entities.size(); i++)
-    {
-        update.update.entities.push_back(entities[i]);
-    }
+	state.serialise(update);
+	Event updateEvent(Event::EVENT_GAMEUPDATE, 0);
 
-    //log(LG_DEBUG, "Update event entities %d", update.update.entities.size());
+	//log(LG_DEBUG, "Update event entities %d", update.update.entities.size());
 
-    for(int i = 0; i < clients.size(); i++)
-    {
-        //log(LG_DEBUG, "Sending update to Client[%d].id:%d", i, clients[i].id);
-        update.id = clients[i].id;
-        net.sendEvent(update);
-    }
+	for(int i = 0; i < clients.size(); i++)
+	{
+		updateEvent.setId(clients[i].id);
+		//log(LG_DEBUG, "Sending update to Client[%d].id:%d", i, clients[i].id);
+		net.sendEvent(updateEvent);
+	}
 }
 
 
