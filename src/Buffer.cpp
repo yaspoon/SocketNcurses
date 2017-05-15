@@ -11,6 +11,21 @@ Buffer::Buffer()
 	data = new uint64_t[len];
 	scratch = 0;
 	scratchBits = 0;
+	bitsWritten = 0;
+	status = OKAY;
+}
+
+Buffer::Buffer(const Buffer &copy)
+{
+	len = copy.len;
+	index = copy.index;
+	read_index = copy.read_index;
+	data = new uint64_t[len];
+	std::copy(&copy.data[0], &copy.data[0] + len, &data[0]);
+	scratch = copy.scratch;
+	scratchBits = copy.scratchBits;
+	bitsWritten = copy.bitsWritten;
+	status = OKAY;
 }
 
 Buffer::~Buffer()
@@ -18,8 +33,30 @@ Buffer::~Buffer()
 	delete[] data;
 }
 
-void Buffer::write(uint64_t input, uint32_t nobits)
+Buffer &Buffer::operator=(const Buffer &copy)
 {
+	if(&copy != this)
+	{
+		len = copy.len;
+		index = copy.index;
+		read_index = copy.read_index;
+		data = new uint64_t[len];
+		std::copy(&copy.data[0], &copy.data[0] + len, &data[0]);
+		scratch = copy.scratch;
+		scratchBits = copy.scratchBits;
+		bitsWritten = copy.bitsWritten;
+	}
+	return *this;
+}
+
+/* 
+ * The only time this should fail is if we run out of memory
+ * on reallocing the data buffer, so retval should pretty much
+ * always be true
+ */
+returnCodes_t Buffer::write(uint64_t input, uint32_t nobits)
+{
+	returnCodes_t retval = OKAY;
 	uint64_t selectBits = 0;
 
 	int newTotalBits = scratchBits + nobits;
@@ -29,9 +66,35 @@ void Buffer::write(uint64_t input, uint32_t nobits)
 		int leftOver = nobits - freeBits; //Number of bits left over in the input
 		scratch= scratch<< freeBits; //Copy the lower bits to the end of scratch.high
 		scratch = scratch| (input >> leftOver); //Add overflow bits to scratch.high
-		data[index] = scratch; //Flush word to buffer
+		if(index < len) //Do we have a large enough buffer to write this out?
+		{
+			data[index] = scratch; //Flush word to buffer
+		}
+		else //No we don't so allocate some extra
+		{
+			std::cout << "Index:" << index << "Len:" << len << std::endl;
+			int new_len = len * 2;
+			typeof(scratch) *new_data = new uint64_t[len];
+			if(new_data != NULL)
+			{
+				memset(new_data, 0, sizeof(scratch) * new_len);
+				memcpy(new_data, data, sizeof(scratch) * len);
+				delete[] data;
+				data = new_data;
+				len = new_len;
+
+				data[index] = scratch; //Flush word to buffer
+			}
+			else
+			{
+				std::cout << "Failed to extend buffer, cannot write out data" << std::endl;
+				status = ERROR;
+				retval = ERROR;
+			}
+		}
 		index += 1;
-		scratch = 0; //Clear scratch high memory
+		bitsWritten += sizeof(scratch) * 8;
+		scratch = 0;
 
 		if(leftOver >= bitsPerWord) //Shifting by number of bits in a word or greater is undefined behaviour
 		{
@@ -57,6 +120,8 @@ void Buffer::write(uint64_t input, uint32_t nobits)
 		scratch = (scratch << nobits) | (selectBits & input);
 		scratchBits += nobits;
 	}
+
+	return retval;
 }
 
 uint64_t Buffer::read(uint32_t nobits)
@@ -78,16 +143,33 @@ uint64_t Buffer::read(uint32_t nobits)
 			scratchDiff *= -1; //Make it positive
 			output = scratch << scratchDiff; //Move the bits we currently have into the correct position in the output
 			scratch = data[read_index]; //Load more bits from mem
+			uint32_t bitsLeftWritten = bitsWritten - (read_index * sizeof(scratch) * 8); //How many bits do we have left written in the buffer.
+			uint32_t shiftRight = 0;
+			if(bitsLeftWritten < bitsPerWord) {
+				scratchBits = bitsLeftWritten;
+				shiftRight = bitsPerWord - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
+				output = output | (scratch >> shiftRight); //Write out the rest of the bits needed for the request
+				scratch = (bitSelector >> scratchDiff) & (scratch >> (bitsPerWord - bitsLeftWritten)); //Get rid the bits we put into output
+				scratchBits -= scratchDiff;
+			} else {
+				scratchBits = sizeof(scratch) * 8; //We've now got an entire word in scratch
+				shiftRight = scratchBits - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
+				output = output | (scratch >> shiftRight); //Write out the rest of the bits needed for the request
+				if(scratchDiff < bitsPerWord) {
+					scratch = (bitSelector >> scratchDiff) & scratch; //Get rid the bits we put into output
+				}
+				else
+				{
+					scratch = 0;
+				}
+				scratchBits -= scratchDiff;
+			}
 			read_index += 1; //Move our data pointer to our next chunk of input
-			scratchBits = sizeof(scratch) * 8; //We've now got an entire word in scratch
-			uint32_t shiftRight = scratchBits - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
-			output = output | (scratch >> shiftRight); //Write out the rest of the bits needed for the request
-			scratch = (bitSelector >> scratchDiff) & scratch; //Get rid the bits we put into output
-			scratchBits -= scratchDiff;
 		}
 		else
 		{
 			std::cout << "Not enough bits to satisfy request, returing garbage" << std::endl;
+			status = ERROR;
 		}
 	}
 	return output;
@@ -98,16 +180,12 @@ void Buffer::flush()
 	if(scratchBits > 0)
 	{
 		int freeBits = bitsPerWord - scratchBits;
-		data[index] = scratch << freeBits;
+		data[index] = scratch;// << freeBits;
+		bitsWritten += scratchBits;
 		index += 1;
 		scratch = 0;
 		scratchBits = 0;
 	}
-}
-
-uint64_t Buffer::getScratch()
-{
-	return scratch;
 }
 
 void Buffer::printData()
@@ -122,8 +200,173 @@ void Buffer::reset()
 {
 	scratch = 0;
 	scratchBits = 0;
+	bitsWritten = 0;
 	index = 0;
 	read_index = 0;
 	memset(data, 0, sizeof(scratch) * len);
-	len = 0;
+}
+
+returnCodes_t Buffer::writeBool(bool input)
+{
+	return write((uint64_t)input, 1);
+}
+
+returnCodes_t Buffer::writeInt8(int8_t input)
+{
+	return write((uint64_t)input, 8);
+}
+
+returnCodes_t Buffer::writeUint8(uint8_t input)
+{
+	return write((uint64_t)input, 8);
+}
+
+returnCodes_t Buffer::writeInt16(int16_t input)
+{
+	return write((uint64_t)input, 16);
+}
+
+returnCodes_t Buffer::writeUint16(uint16_t input)
+{
+	return write((uint64_t)input, 16);
+}
+
+returnCodes_t Buffer::writeEnum(uint32_t input) 
+{
+	return write((uint64_t)input, 32);
+}
+
+returnCodes_t Buffer::writeInt32(int32_t input)
+{
+	return write((uint64_t)input, 32);
+}
+
+returnCodes_t Buffer::writeUint32(uint32_t input)
+{
+	return write((uint64_t)input, 32);
+}
+
+returnCodes_t Buffer::writeInt64(int64_t input)
+{
+	return write((uint64_t)input, 64);
+}
+
+returnCodes_t Buffer::writeUint64(uint64_t input)
+{
+	return write((uint64_t)input, 64);
+}
+
+bool Buffer::readBool()
+{
+	bool retval = (bool)read(1);
+	return retval;
+}
+
+int8_t Buffer::readInt8()
+{
+	int8_t retval = (int8_t)read(8);
+	return retval;
+}
+
+uint8_t Buffer::readUint8()
+{
+	uint8_t retval = (uint8_t)read(8);
+	return retval;
+}
+
+int16_t Buffer::readInt16()
+{
+	int16_t retval = (int16_t)read(16);
+	return retval;
+}
+
+uint16_t Buffer::readUint16()
+{
+	uint16_t retval = (uint16_t)read(16);
+	return retval;
+}
+
+uint32_t Buffer::readEnum()
+{
+	uint32_t retval = (uint32_t)read(32);
+	return retval;
+}
+
+int32_t Buffer::readInt32()
+{
+	int32_t retval = (int32_t)read(32);
+	return retval;
+}
+
+uint32_t Buffer::readUint32()
+{
+	uint32_t retval = (uint32_t)read(32);
+	return retval;
+}
+
+int64_t Buffer::readInt64()
+{
+	int64_t retval = (int64_t)read(64);
+	return retval;
+}
+
+uint64_t Buffer::readUint64()
+{
+	uint64_t retval = (uint64_t)read(64);
+	return retval;
+}
+
+int Buffer::bitsLeft()
+{
+	int retval = bitsWritten - (read_index * sizeof(scratch) * 8);
+	return (retval > 0) ? retval : 0;
+}
+
+int Buffer::totalBits()
+{
+	return bitsWritten;
+}
+
+int Buffer::bytesLeft()
+{
+	int retval = totalBytes() - (read_index * sizeof(scratch));
+	return (retval > 0) ? retval : 0; //Not sure this will work. Reasonably sure retval will giant because size_t is unsigned...
+}
+
+int Buffer::totalBytes()
+{
+	int retval = ((bitsWritten / 8) + (scratchBits / 8));
+	if((bitsWritten % 8) != 0) {
+		retval += 1;
+	}
+	if((scratchBits % 8) != 0) {
+		retval += 1;
+	}
+	return retval;
+}
+
+uint8_t *Buffer::bytes()
+{
+	return (uint8_t*)data;
+}
+
+void Buffer::fillFromBuffer(uint8_t *buf, size_t nbytes)
+{
+	scratch = 0;
+	scratchBits = 0;
+	read_index = 0;
+	if(nbytes > len) {
+		len = nbytes / sizeof(scratch);
+		len += ((nbytes % sizeof(scratch)) > 0) ? 1 : 0;
+		delete[] data;
+		data = new uint64_t[len];
+	}
+	index = len;
+	bitsWritten = nbytes * 8; //This isn't perfectly accurate since we're given bytes not bits as input
+	memcpy(data, buf, nbytes);
+}
+
+returnCodes_t Buffer::getStatus()
+{
+	return status;
 }
