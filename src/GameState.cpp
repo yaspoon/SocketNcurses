@@ -1,5 +1,9 @@
 #include "GameState.h"
 #include <typeinfo>
+#include <iostream>
+
+#include "ReadBuffer.h"
+#include "WriteBuffer.h"
 
 GameState::GameState()
 {
@@ -40,24 +44,20 @@ void GameState::setPlayer(int id, Player player)
     players[id] = player;
 }
 
-std::vector<Ent> GameState::getGameUpdate()
+template <typename Stream> bool GameState::serialise(Stream &stream)
 {
-    std::vector<Ent> retVal;
+	bool retval = true;
+	uint64_t size = players.size();
+	serialise_uint(stream, size, 0, MAX_PLAYERS);
+	for(int i = 0; i < players.size() && retval; i++) {
+		if(!players[i].serialise(stream)) {
+			std::cout << "GameState:Serialising player " << i << " failed, aborting" << std::endl;
+			retval = false;
+		}
+	}
 
-    for(int i = 0; i < players.size(); i++)
-    {
-        Ent tmp = players[i].toEnt();
-        retVal.push_back(tmp);
-    }
-
-    return retVal;
+    return retval;
 }
 
-void GameState::setGameUpdate(std::vector<Ent> update)
-{
-    for(int i = 0; i < update.size(); i++)
-    {
-        Player newPlayer(update[i]);
-        players[i] = newPlayer;
-    }
-}
+template bool GameState::serialise<ReadBuffer>(ReadBuffer &);
+template bool GameState::serialise<WriteBuffer>(WriteBuffer &);
