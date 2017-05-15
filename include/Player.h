@@ -8,10 +8,8 @@ class Player : public Entity
 {
     public:
         Player();
-        Player(Entity& ent);
-        Player(Ent copyEnt);
-        Ent toEnt();
         virtual ~Player();
+	template <typename Stream> bool serialise(Stream &stream);
         int x;
         int y;
         char character;
