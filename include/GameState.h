@@ -5,11 +5,12 @@
 #include "Entity.h"
 #include <map>
 #include <vector>
-
+#include "Stream.h"
 
 class GameState
 {
     public:
+	    static const int MAX_PLAYERS = 128;
         GameState();
         virtual ~GameState();
 
@@ -17,8 +18,7 @@ class GameState
         Player getPlayer(int id);
         std::vector<Player> getPlayers();
         void setPlayer(int id, Player player);
-        std::vector<Ent> getGameUpdate();
-        void setGameUpdate(std::vector<Ent> update);
+	template <typename Stream> bool serialise(Stream &stream);
     protected:
     private:
         std::map<int,Player> players;
