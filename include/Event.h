@@ -6,6 +6,8 @@
 #include "Player.h"
 #include "Event.h"
 #include <vector>
+#include "Stream.h"
+#include "Buffer.h"
 
 
 class Event
@@ -13,22 +15,27 @@ class Event
     public:
         enum Event_Net_type
         {
-            EVENT_NET_UNKNOWN = 0,
-            EVENT_NET_CONNECT,
-            EVENT_NET_CONNECT_ACK,
-            EVENT_NET_CONNECTED,
-            EVENT_NET_CONNECTED_ACK,
-            EVENT_NET_CONNECTING,
-            EVENT_NET_DISCONNECT,
-            EVENT_NET_DISCONNECTED
+		EVENT_NET_START= 0,
+		EVENT_NET_UNKNOWN,
+		EVENT_NET_CONNECT,
+		EVENT_NET_CONNECT_ACK,
+		EVENT_NET_CONNECTED,
+		EVENT_NET_CONNECTED_ACK,
+		EVENT_NET_CONNECTING,
+		EVENT_NET_DISCONNECT,
+		EVENT_NET_DISCONNECTED,
+		EVENT_NET_DATA,
+		EVENT_NET_END
         };
 
-        enum Event_type
+        enum Event_type: uint32_t
         {
-            EVENT_UNKNOWN = 0,
-            EVENT_NET,
-            EVENT_KEY,
-            EVENT_GAMEUPDATE
+		EVENT_TYPE_START = 0,
+		EVENT_DEFAULT,
+		EVENT_NET,
+		EVENT_KEY,
+		EVENT_GAMEUPDATE,
+		EVENT_TYPE_END
         };
 
         enum Event_Key_type
@@ -59,20 +66,18 @@ class Event
 
         } Key_Event;
 
-        typedef struct
-        {
-            std::vector<Ent> entities;
-        } GameUpdate_Event;
-
         Event_type type;
         Net_Event net;
         Key_Event key;
-        GameUpdate_Event update;
         int id;
+	Buffer stream;
 
         Event();
+	Event(Event_type newType, int newId);
         //void operator=(Event event);
         virtual ~Event();
+	void setStream(const Buffer input);
+	void setId(int newId);
     protected:
     private:
 };
