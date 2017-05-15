@@ -50,7 +50,6 @@ class Server
         Network net;
 
         bool addClient(std::string address, std::string port, int id);
-        bool handleFrame(int fd, NET_Frame frame, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
         void handleNetEvent(Event event);
         void handleKeyEvent(Event event);
         void sendUpdate();
