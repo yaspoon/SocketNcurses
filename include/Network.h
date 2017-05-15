@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <list>
 #include <map>
 #include "LinkedList.h"
 #include "uuid/uuid.h"
@@ -13,48 +14,27 @@
 #include "Player.h"
 #include "Entity.h"
 #include "NetworkStatistics.h"
+#include "Buffer.h"
+#include "Frame.h"
 
 #include <pthread.h>
 
+const uint32_t MAX_NETWORK_BUFFER_BYTES = 1500;
 
-enum DATA_type
-{
-    DATA_KEY_DOWN = 0,
-    DATA_KEY_UP,
-    DATA_GAMEUPDATE
+/*
+struct NET_frame_data {
+	uint8_t data[MAX_NETWORK_BUFFER_BYTES - sizeof(NET_Frame)];
 };
 
-typedef struct
-{
-    DATA_type data_type;
-    int numEnts;
-    char key;
-    Ent ents[8];
-} Data;
-
-enum NET_Type
-{
-    ACK = 0,
-    CONNECTION_REQUEST,
-    CONNECTION_REQUEST_ACK,
-    CONNECTION_ACCEPTED,
-    CONNECTION_ACCEPTED_ACK,
-    DATA
-
-};
-
-union NET_Frame_Body
-{
-    Data data;
-    //time_t ping;
-};
-
-struct NET_Frame
-{
-    int num;
-    NET_Type type;
-    NET_Frame_Body body;
-};
+struct NET_Frame {
+	char magic[4] = "NUB" + VERSION;
+	uint32_t crc;
+	int num;
+	uint8_t type;
+	//Net_frame_data data;
+	char end_magic[4] = "END" + VERSION
+}
+*/
 
 enum NET_Mode
 {
@@ -84,30 +64,29 @@ class Network
         Event::Event_Net_type getStatus();
         void setStatus(Event::Event_Net_type newStatus);
 
-        bool Setup(std::string address, std::string port, NET_Mode mode, int id = 0);
+        bool Setup(std::string address, std::string port, NET_Mode mode);
         NetworkStatistics getStatistics();
     protected:
     private:
+	struct drand48_data drand;
+	int id;
         int sfd;
         int nextId;
         std::map<int, connection> connections;
-        //LinkedList<Event> eventList;
-        Event eventList;
+	std::list<Event> eventList;
         Event::Event_Net_type status;
         bool setup;
 
         pthread_t runThread;
         pthread_mutex_t mutex;
-        LinkedList<struct NET_Frame> frameQueue;
         NetworkStatistics statistics;
 
-        bool SendFrame(int fd, NET_Frame frame, sockaddr_storage peer, socklen_t peer_len);
+        bool SendFrame(int fd, Frame frame, sockaddr_storage peer, socklen_t peer_len);
         bool sendACK(int fd, int ack_num, struct sockaddr_storage peer_addr, socklen_t peer_addr_len);
-        int ReceiveFrame(int fd, NET_Frame *frame, sockaddr_storage *peer, socklen_t *peer_len);
+        static int ReceiveFrame(int fd, Buffer &frame, struct sockaddr_storage *peer, socklen_t *peer_len);
         bool CreateSocket(std::string address, std::string port, NET_Mode sockType, int id = 0);
         static void* run(void *argument);
         void handleConnectionRequest( int frameNum, sockaddr_storage peer_addr, socklen_t peer_addr_len);
-        size_t sizeofFrame(NET_Frame frame);
         void handleNetEvent(Event event);
         void handleKeyEvent(Event event);
         void handleGameUpdateEvent(Event event);
