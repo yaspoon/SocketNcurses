@@ -10,58 +10,38 @@ map
 netpacket
 
 Server:
+Takes in events, whether they be from, the network, clients or the console.
+Depending on the event type it maybe processed directly by the server (Client disconnects) or passed on to the game object.
 Has a array of upto 32 clients, new clients object created for each new connection
 Client sends a uuid in its connection request which is then stored in the client object
-
 each client object has a player object associated with it, stores the in game details, xyz
 
-Server::run	
-	Network(address,port,SOCK_SERVER)
-	Network.listen()
-	while(!quit)
-		getEvents from network
-		for each event
-			processEvent changing game state as required
-		end for
-		
-		run game frame
-		
-		generate game update
-		for each client
-			Network.send(gameUpdate)
-		end for
-	end while
-		
-		
+Server loop:
+	ProcessNetworkEvents
+	ProcessConsoleEvents
+	UpdateGame (Call game object update function and pass in relevant events)
+	GetCurrentGameState game.getState()
+	UpdateClientObjects (Handle disconnects, timeouts, heartbeats, calculate gamestate delta for client etc)
+	PushUpdateToClients {
+		for(client in clients) {
+			update = client.serializeGamestate()
+			network.send(update, client.id)
+	}
+
+
 	
-Client::run
-	create socket
-	
-	while(!connected or count < 5)
-		output: Attempting "count" to connect to server
-		if(!ACK)
-			send connection packet
-		end if
 		
-		epoll wait on socket for 5
 		
-		if(socket is ready)
-			read packet
-				if(packet.type == CONNECTION_ACCEPTED)
-					connected = true
-				else if(packet.type == ACK && frame numbers match)
-					ACK = true
-				end if
-		end if
-		
-		count++
-	end while
-	
-	if(connected)
-		runClientGame
-	else
-		output: Couldn't connect to server
-	end if
+Client:
+Responsible for connecting to a server, sending client updates to the server and passing server updates
+to the game object.
+
+Client loop
+	ProcessServerEvents()
+	UpdateGameState(Events)
+	GetUserEvents()
+	update = userEvents.serialise()
+	network.send(update, server)
 	
 Network::Network(string address, string port, networktype) //netowrk type is server/client
 	this->address=address
