@@ -22,8 +22,8 @@ extern bool debug;
 
 typedef enum
 {
-    OKAY = 0,
-    ERROR
+    ERROR = 0,
+    OKAY
 } returnCodes_t;
 
 typedef enum
