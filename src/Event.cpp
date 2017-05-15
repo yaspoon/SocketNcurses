@@ -3,8 +3,14 @@
 
 Event::Event()
 {
-    type = EVENT_UNKNOWN;
+    type = EVENT_DEFAULT;
     id = -1;
+}
+
+Event::Event(Event_type newType, int newId)
+{
+	type = newType;
+	id = newId;
 }
 
 Event::~Event()
@@ -39,3 +45,13 @@ Event::~Event()
         break;
     }
 }*/
+
+void Event::setStream(const Buffer input)
+{
+	stream = input;
+}
+
+void Event::setId(int newId)
+{
+	id = newId;
+}
