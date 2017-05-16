@@ -147,9 +147,9 @@ uint64_t Buffer::read(uint32_t nobits)
 			uint32_t shiftRight = 0;
 			if(bitsLeftWritten < bitsPerWord) {
 				scratchBits = bitsLeftWritten;
-				shiftRight = bitsPerWord - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
+				shiftRight = scratchBits - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
 				output = output | (scratch >> shiftRight); //Write out the rest of the bits needed for the request
-				scratch = (bitSelector >> scratchDiff) & (scratch >> (bitsPerWord - bitsLeftWritten)); //Get rid the bits we put into output
+				scratch = scratch & (bitSelector >> ((bitsPerWord - scratchBits) +  scratchDiff)); //Get rid of bits we just wrote out
 				scratchBits -= scratchDiff;
 			} else {
 				scratchBits = sizeof(scratch) * 8; //We've now got an entire word in scratch
