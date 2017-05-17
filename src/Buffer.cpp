@@ -64,8 +64,10 @@ returnCodes_t Buffer::write(uint64_t input, uint32_t nobits)
 	{
 		int freeBits = (bitsPerWord - scratchBits); //Number of bits left before this word is full
 		int leftOver = nobits - freeBits; //Number of bits left over in the input
-		scratch= scratch<< freeBits; //Copy the lower bits to the end of scratch.high
-		scratch = scratch| (input >> leftOver); //Add overflow bits to scratch.high
+		if(scratchBits < bitsPerWord) {
+			scratch = scratch | (input << (bitsPerWord - freeBits)); //Add input bits that will fit to the end of scratch
+		}
+
 		if(index < len) //Do we have a large enough buffer to write this out?
 		{
 			data[index] = scratch; //Flush word to buffer
@@ -104,7 +106,7 @@ returnCodes_t Buffer::write(uint64_t input, uint32_t nobits)
 		{
 			selectBits = ~((~selectBits) << leftOver);
 		}
-		scratch = scratch |  (selectBits & input);
+		scratch = input >> freeBits; //Get rid of bits we put into buffer
 		scratchBits = leftOver;
 	}
 	else
@@ -117,7 +119,8 @@ returnCodes_t Buffer::write(uint64_t input, uint32_t nobits)
 		{
 			selectBits = ~((~selectBits)<< nobits);
 		}
-		scratch = (scratch << nobits) | (selectBits & input);
+		//scratch = scratch | ((selectBits & input) << scratchBits); //Shift input to add it on the end of current scratch bits
+		scratch = scratch | (input << scratchBits); //Shift input to add it on the end of current scratch bits
 		scratchBits += nobits;
 	}
 
@@ -129,11 +132,11 @@ uint64_t Buffer::read(uint32_t nobits)
 	typeof(scratch) output = 0;
 	int32_t scratchDiff = scratchBits - nobits;
 	typeof(scratch) bitSelector = ~0; //Set a word to all 1 bits
+	uint32_t shiftRight = bitsPerWord - nobits; //How far do we need to shift bitSelector right to get the bits we need into the output
 	if(scratchDiff >= 0) //We have all the bits we need in scratch
 	{
-		output = scratch >> scratchDiff; //Put the upper bits requested into output
-		bitSelector = bitSelector >> (bitsPerWord - scratchDiff); //We only want the bottom bits for later use!
-		scratch = scratch & bitSelector;
+		output = scratch & (bitSelector >> shiftRight); //Select only bottom bits that were asked for
+		scratch = scratch >> nobits;
 		scratchBits -= nobits;
 	}
 	else
@@ -141,28 +144,21 @@ uint64_t Buffer::read(uint32_t nobits)
 		if(index > 0 && read_index < index)
 		{
 			scratchDiff *= -1; //Make it positive
-			output = scratch << scratchDiff; //Move the bits we currently have into the correct position in the output
+			output = scratch; //Move the bits we currently have into the output
 			scratch = data[read_index]; //Load more bits from mem
 			uint32_t bitsLeftWritten = bitsWritten - (read_index * sizeof(scratch) * 8); //How many bits do we have left written in the buffer.
-			uint32_t shiftRight = 0;
 			if(bitsLeftWritten < bitsPerWord) {
-				scratchBits = bitsLeftWritten;
-				shiftRight = scratchBits - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
-				output = output | (scratch >> shiftRight); //Write out the rest of the bits needed for the request
-				scratch = scratch & (bitSelector >> ((bitsPerWord - scratchBits) +  scratchDiff)); //Get rid of bits we just wrote out
-				scratchBits -= scratchDiff;
+				output = output | (scratch << scratchBits); //Write out the rest of the bits needed for the request
+				scratchBits = bitsLeftWritten - scratchDiff;
+				scratch = scratch >> nobits; //Get rid of bits we just wrote out
 			} else {
-				scratchBits = sizeof(scratch) * 8; //We've now got an entire word in scratch
-				shiftRight = scratchBits - scratchDiff; //How far do we need to shift right to get the remaining bits we needed into the output
-				output = output | (scratch >> shiftRight); //Write out the rest of the bits needed for the request
+				output = output | ((scratch & (bitSelector >> (bitsPerWord - nobits))) << scratchBits); //Write out the rest of the bits needed for the request
+				scratchBits = sizeof(scratch) * 8 - scratchDiff; //We've now got an entire word in scratch
 				if(scratchDiff < bitsPerWord) {
-					scratch = (bitSelector >> scratchDiff) & scratch; //Get rid the bits we put into output
-				}
-				else
-				{
+					scratch = scratch >> scratchDiff; //Get rid the bits we put into output
+				} else {
 					scratch = 0;
 				}
-				scratchBits -= scratchDiff;
 			}
 			read_index += 1; //Move our data pointer to our next chunk of input
 		}
