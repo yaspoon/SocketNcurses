@@ -29,7 +29,6 @@ void FrameTestSuite::test_frame_serialisation()
 	rb.fillFromBuffer(wb.bytes(), wb.totalBytes());
 	TEST_ASSERT(frame2.serialise(rb));
 
-	std::cout << frame1.getType() << ":" << frame2.getType() << std::endl;
 	TEST_ASSERT(frame1.getType() == frame2.getType());
 	TEST_ASSERT(frame1.getId() == frame2.getId());
 	TEST_ASSERT(frame1.getNum() == frame2.getNum());
