@@ -1,6 +1,7 @@
 #include "Timer.h"
 #include "Common.h"
 #include <string.h>
+#include "Log.h"
 
 Timer::Timer()
 {
@@ -22,7 +23,7 @@ void Timer::start()
     }
     else
     {
-        log(LG_DEBUG, const_cast<char *>("Timer already started at %d second %d nanoseconds"), startTime.tv_sec, startTime.tv_nsec);
+        DEBUG << "Timer already started at " << startTime.tv_sec << " second " << startTime.tv_nsec << " nanoseconds" << DEBUG_END;
     }
 }
 
@@ -40,11 +41,11 @@ void Timer::pause()
     {
         paused = true;
         clock_gettime(CLOCK_REALTIME, &pauseTime);
-        log(LG_DEBUG, const_cast<char *>("Paused timer at %d second %d nanoseconds"), pauseTime.tv_sec, pauseTime.tv_nsec);
+        DEBUG << "Paused timer at " << pauseTime.tv_sec << " seconds " << pauseTime.tv_nsec << " nanoseconds" << DEBUG_END;
     }
     else
     {
-        log(LG_DEBUG, const_cast<char *>("Timer already Paused at %d second %d nanoseconds"), pauseTime.tv_sec, pauseTime.tv_nsec);
+        DEBUG << "Timer already paused at " << pauseTime.tv_sec << " seconds " << pauseTime.tv_nsec << " nanoseconds" << DEBUG_END;
     }
 }
 
@@ -88,5 +89,5 @@ void Timer::printTime()
 {
     struct timespec tmp;
     clock_gettime(CLOCK_REALTIME, &tmp);
-    log(LG_DEBUG, const_cast<char *>("Time %d seconds, %d nanoseconds"), tmp.tv_sec, tmp.tv_nsec );
+    DEBUG << "Time " << tmp.tv_sec << " seconds " << tmp.tv_nsec << " nanoseconds" << DEBUG_END;
 }
