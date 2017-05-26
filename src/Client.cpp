@@ -1,5 +1,7 @@
 #include "Client.h"
 
+#include "Log.h"
+
 #include "Event.h"
 #include "Timer.h"
 
@@ -7,8 +9,6 @@
 #include <ncurses.h>
 #include "ReadBuffer.h"
 #include "WriteBuffer.h"
-
-
 
 
 Client::Client()
@@ -74,7 +74,7 @@ bool Client::connect()
                     {
                         Server_ID = tmp.id;
                         retVal = true;
-                        log(LG_DEBUG, const_cast<char *>("Client::run got EVENT_CONNECT_ACK"));
+                        DEBUG << "Client::run got EVENT_CONNECT_ACK" << DEBUG_END;
                     }
                 break;
                 }
@@ -90,7 +90,7 @@ void Client::run()
     bool quit = false;
     char data;
 
-    log(LG_DEBUG, const_cast<char *>("Connecting to %s:%s"), Server_Address.c_str(), Server_Port.c_str());
+    DEBUG << "Connecting to " << Server_Address << ":" << Server_Port << DEBUG_END;
     if(connect())
     {
         initscr();
@@ -161,7 +161,7 @@ void Client::run()
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Failed to connect to %s:%s after %d attemps"), Server_Address.c_str(), Server_Port.c_str(), CONNECTION_ATTEMPTS);
+        DEBUG << "Failed to connect to " << Server_Address << ":" << Server_Port << "after " <<  CONNECTION_ATTEMPTS << "attemps" << DEBUG_END;
     }
 }
 
