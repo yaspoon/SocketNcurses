@@ -26,15 +26,7 @@ typedef enum
     OKAY
 } returnCodes_t;
 
-typedef enum
-{
-    LG_STANDARD = 0,
-    LG_DEBUG,
-    LG_ERROR
-} loglevel;
-
 //Functions
-void log(loglevel level, char *format, ...);
 void delay(int milliseconds);
 
 #endif // COMMON_H

@@ -5,6 +5,7 @@
 
 #include "Timer.h"
 
+#if 0
 typedef enum
 {
     NONE = 0,
@@ -214,6 +215,7 @@ void markTypes(struct mark_s ** marks, char *format)
     }
 
 }
+#endif
 
 void delay(int milliseconds)
 {
