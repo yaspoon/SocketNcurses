@@ -51,6 +51,7 @@ private:
 	void test_write_read_helper_multiple();
 	void test_write_read_helper_multiple_reversed();
 	void test_write_read_helper_multiple_random();
+	void test_write_read_lots();
 };
 
 #endif

@@ -25,6 +25,7 @@ BufferTestSuite::BufferTestSuite()
 	TEST_ADD(BufferTestSuite::test_write_read_helper_multiple);
 	TEST_ADD(BufferTestSuite::test_write_read_helper_multiple_reversed);
 	TEST_ADD(BufferTestSuite::test_write_read_helper_multiple_random);
+	TEST_ADD(BufferTestSuite::test_write_read_lots);
 }
 
 BufferTestSuite::~BufferTestSuite()
@@ -327,5 +328,34 @@ void BufferTestSuite::test_write_read_helper_multiple_random()
 	TEST_ASSERT(buf.readBool() == true_bool);
 	TEST_ASSERT(buf.readUint16() == short_value);
 	TEST_ASSERT(buf.readUint64() == uint64);
+	buf.reset();
+}
+
+void BufferTestSuite::test_write_read_lots()
+{
+	std::cout << "Testing multiple write/read" << std::endl;
+	int count = 1000;
+	for(int i = 0; i < count; i++)
+	{
+		buf.write(true_bool, noBitsInBool);
+		buf.write(false_bool, noBitsInBool);
+		buf.write(byte_value, noBitsInByte);
+		buf.write(short_value, noBitsInShort);
+		buf.write(uint32, noBitsInInt32);
+		buf.write(uint64, noBitsInInt64);
+		buf.write(byte_value, noBitsInByte);
+	}
+	buf.flush();
+
+	for(int i = 0; i < count; i++)
+	{
+		TEST_ASSERT(((typeof(true_bool))buf.read(noBitsInBool)) == true_bool);
+		TEST_ASSERT(((typeof(false_bool))buf.read(noBitsInBool)) == false_bool);
+		TEST_ASSERT(((typeof(byte_value))buf.read(noBitsInByte)) == byte_value);
+		TEST_ASSERT(((typeof(short_value))buf.read(noBitsInShort)) == short_value);
+		TEST_ASSERT(((typeof(uint32))buf.read(noBitsInInt32)) == uint32);
+		TEST_ASSERT(((typeof(uint64))buf.read(noBitsInInt64)) == uint64);
+		TEST_ASSERT(((typeof(byte_value))buf.read(noBitsInByte)) == byte_value);
+	}
 	buf.reset();
 }
