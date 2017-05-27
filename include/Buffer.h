@@ -31,7 +31,7 @@ public:
 	Buffer &operator=(const Buffer &copy);
 	returnCodes_t write(uint64_t input, uint32_t nobits);
 	uint64_t read(uint32_t nobits);
-	void fillFromBuffer(uint8_t *buf, size_t nbytes);
+	void fillFromBuffer(uint64_t *buf, size_t nbytes);
 	void printData();
 	void flush();
 	void reset();
@@ -41,7 +41,7 @@ public:
 	int totalBytes();
 	int bytesLeft();
 
-	uint8_t *bytes();
+	uint64_t *bytes();
 
 	/*Ugggghhhh, it stops lots of typecasting in the caller code atleast*/
 	returnCodes_t writeBool(bool input);
@@ -54,6 +54,7 @@ public:
 	returnCodes_t writeUint32(uint32_t input);
 	returnCodes_t writeInt64(int64_t input);
 	returnCodes_t writeUint64(uint64_t input);
+	returnCodes_t writeBuffer(Buffer input);
 
 	bool readBool();
 	int8_t readInt8();

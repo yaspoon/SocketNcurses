@@ -76,7 +76,7 @@ returnCodes_t Buffer::write(uint64_t input, uint32_t nobits)
 		{
 			std::cout << "Index:" << index << "Len:" << len << std::endl;
 			int new_len = len * 2;
-			typeof(scratch) *new_data = new uint64_t[len];
+			typeof(scratch) *new_data = new uint64_t[new_len];
 			if(new_data != NULL)
 			{
 				memset(new_data, 0, sizeof(scratch) * new_len);
@@ -150,7 +150,7 @@ uint64_t Buffer::read(uint32_t nobits)
 			if(bitsLeftWritten < bitsPerWord) {
 				output = output | (scratch << scratchBits); //Write out the rest of the bits needed for the request
 				scratchBits = bitsLeftWritten - scratchDiff;
-				scratch = scratch >> nobits; //Get rid of bits we just wrote out
+				scratch = scratch >> scratchDiff; //Get rid of bits we just wrote out
 			} else {
 				output = output | ((scratch & (bitSelector >> (bitsPerWord - nobits))) << scratchBits); //Write out the rest of the bits needed for the request
 				scratchBits = sizeof(scratch) * 8 - scratchDiff; //We've now got an entire word in scratch
@@ -252,6 +252,23 @@ returnCodes_t Buffer::writeUint64(uint64_t input)
 	return write((uint64_t)input, 64);
 }
 
+returnCodes_t Buffer::writeBuffer(Buffer input)
+{
+	returnCodes_t retval = OKAY;
+	int words = input.bitsWritten / bitsPerWord;
+	for(int i = 0; i < words && retval; i++)
+	{
+		retval = write(input.data[i], bitsPerWord);
+	}
+
+	int leftOver = input.bitsWritten % bitsPerWord;
+	if(leftOver != 0 && retval) {
+		retval = write(input.data[words], leftOver);
+	}
+
+	return retval;
+}
+
 bool Buffer::readBool()
 {
 	bool retval = (bool)read(1);
@@ -341,25 +358,30 @@ int Buffer::totalBytes()
 	return retval;
 }
 
-uint8_t *Buffer::bytes()
+uint64_t *Buffer::bytes()
 {
-	return (uint8_t*)data;
+	return data;
 }
 
-void Buffer::fillFromBuffer(uint8_t *buf, size_t nbytes)
+void Buffer::fillFromBuffer(uint64_t *buf, size_t nbytes)
 {
 	scratch = 0;
 	scratchBits = 0;
 	read_index = 0;
-	if(nbytes > len) {
-		len = nbytes / sizeof(scratch);
-		len += ((nbytes % sizeof(scratch)) > 0) ? 1 : 0;
+	int nwords = 0;
+	if(nbytes % sizeof(scratch) != 0) {
+		nwords = (nbytes / sizeof(scratch)) + 1;
+	} else {
+		nwords = (nbytes / sizeof(scratch));
+	}
+	if(nwords > len) {
+		len = nwords;
 		delete[] data;
 		data = new uint64_t[len];
 	}
 	index = len;
-	bitsWritten = nbytes * 8; //This isn't perfectly accurate since we're given bytes not bits as input
-	memcpy(data, buf, nbytes);
+	bitsWritten = nbytes * 8; //This isn't perfectly accurate
+	memcpy(data, buf, sizeof(scratch) * nwords);
 }
 
 returnCodes_t Buffer::getStatus()
