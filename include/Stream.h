@@ -42,7 +42,7 @@ template <int64_t min, int64_t max> struct BitsRequired
 		if(Stream::isWriting) {						\
 			assert(value >= min);					\
 			assert(value <= max);					\
-			int64_value = (typeof(int64_value))input_value;		\
+			int64_value = (typeof(int64_value))value;		\
 		}								\
 		if(!stream.SerialiseInt(int64_value, bits_required(min, max))) {		\
 			return false;						\
@@ -87,15 +87,23 @@ template <int64_t min, int64_t max> struct BitsRequired
 		uint64_t uint64_value;						\
 		uint32_t noBitsInFloat = sizeof(float) * 8;			\
 		FloatToInt fti;							\
-		if(Stream::IsWriting) {						\
+		if(Stream::isWriting) {						\
 			fti.f = value;						\
 			uint64_value = (typeof(uint64_value))fti.i;		\
 		}								\
 		if(!stream.SerialiseBits((uint64_t)fti.i, noBitsInFloat)) {	\
 			return false						\
 		}								\
-		if(Stream::IsReading) {						\
+		if(Stream::isReading) {						\
 			value = fti.f;						\
+		}								\
+	} while(0)
+
+#define serialise_buffer(stream, data)						\
+	do									\
+	{									\
+		if(!stream.SerialiseBuffer(data)) {				\
+			return false;						\
 		}								\
 	} while(0)
 #endif
