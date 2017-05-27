@@ -12,8 +12,8 @@
 #include "Player.h"
 #include "Network.h"
 
-#include "GameState.h"
 #include "Timer.h"
+#include "Game.h"
 
 
 
@@ -33,7 +33,7 @@ class Server
         std::string SV_Port;
         const static int MAXFPS = 60;
 
-        GameState state;
+	Game game;
 
         struct SV_Client
         {
@@ -53,6 +53,6 @@ class Server
         void handleNetEvent(Event event);
         void handleKeyEvent(Event event);
         void sendUpdate();
+	returnCodes_t collectEvents();
 };
-
 #endif // SERVER_H

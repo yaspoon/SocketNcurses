@@ -10,6 +10,8 @@
 #include "Buffer.h"
 #include "WriteBuffer.h"
 
+#include "Log.h"
+
 Server::Server()
 {
     SV_Address = "127.0.0.1";
@@ -67,28 +69,34 @@ returnCodes_t Server::run()
     }
 }
 
+returnCodes_t Server::collectEvents()
+{
+	STUB << "collectEvents doesn't do anything yet" << STUB_END;	
+}
+
 bool Server::addClient(std::string address, std::string port, int id)
 {
-    bool retVal = false;
+	STUB << "Server::addClient STUB" << STUB_END;
+	bool status = false;
+	if((clients.size() + 1) <= 32)
+	{
+		SV_Client newCLient;
+		newCLient.status = Event::EVENT_NET_CONNECTED;
+		newCLient.frameNo = 0;
+		newCLient.nextFrameNo = 0;
+		newCLient.ackNo = 0;
+		newCLient.id = id;
+		STUB << "Server::addClient Created Client[" << id << "]" << STUB_END;
 
-    if((clients.size() + 1) <= 32)
-    {
-        SV_Client newCLient;
-        newCLient.status = Event::EVENT_NET_CONNECTED;
-        newCLient.frameNo = 0;
-        newCLient.nextFrameNo = 0;
-        newCLient.ackNo = 0;
-        newCLient.id = id;
-        log(LG_DEBUG, const_cast<char *>("Server::addClient Created Client[%d]"), id);
+		//state.addPlayer(id);
+		STUB << "STUB sending new client event to game" << STUB_END;
 
-        state.addPlayer(id);
+		clients[id] = newCLient;
 
-        clients[id] = newCLient;
+		status = true;
+	}
 
-        retVal = true;
-    }
-
-    return retVal;;
+	return status;
 }
 
 void Server::handleNetEvent(Event event)
@@ -97,7 +105,7 @@ void Server::handleNetEvent(Event event)
     switch(net.net_type)
     {
         case Event::EVENT_NET_CONNECT:
-            log(LG_DEBUG, const_cast<char *>("Server::run got EVENT_CONNECTION from %s:%s"), net.address.c_str(), net.port.c_str());
+            DEBUG << "Server::run got EVENT_CONNECTION from " << net.address << ":" <<  net.port << DEBUG_END;
             addClient(net.address, net.port, event.id);
             Event conAck;
             conAck.type = Event::EVENT_NET;
@@ -110,50 +118,10 @@ void Server::handleNetEvent(Event event)
     }
 }
 
+/*This should be handling Console commands*/
 void Server::handleKeyEvent(Event event)
 {
-    switch(event.key.key_type)
-    {
-        case Event::EVENT_KEY_DOWN:
-        {
-            switch(event.key.sym)
-            {
-                case Event::KEY_A:
-                {
-                    Player thePlayer = state.getPlayer(event.id);
-                    thePlayer.x -= 1;
-                    state.setPlayer(event.id, thePlayer);
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.x=%d"), event.id, thePlayer.x);
-                }
-                break;
-                case Event::KEY_W:
-                {
-                    Player thePlayer = state.getPlayer(event.id);
-                    thePlayer.y -= 1;
-                    state.setPlayer(event.id, thePlayer);
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.y=%d"), event.id, thePlayer.y);
-                }
-                break;
-                case Event::KEY_S:
-                {
-                    Player thePlayer = state.getPlayer(event.id);
-                    thePlayer.y += 1;
-                    state.setPlayer(event.id, thePlayer);
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.y=%d"), event.id, thePlayer.y);
-                }
-                break;
-                case Event::KEY_D:
-                {
-                    Player thePlayer = state.getPlayer(event.id);
-                    thePlayer.x += 1;
-                    state.setPlayer(event.id, thePlayer);
-                    log(LG_DEBUG, const_cast<char *>("Client[%d].CL_Player.x=%d"), event.id, thePlayer.x);
-                }
-                break;
-            }
-        }
-        break;
-    }
+	STUB << "Server::handleKeyEvent STUB" << STUB_END;
 }
 
 void Server::sendUpdate()
@@ -161,10 +129,11 @@ void Server::sendUpdate()
 	WriteBuffer update;
 	update.writeEnum(Event::EVENT_GAMEUPDATE);
 
-	log(LG_DEBUG, const_cast<char *>("STUB: Server::sendUpdate isn't implemented!"));
+	STUB << "Server::sendUpdate isn't implemented!" << STUB_END;
 
-	state.serialise(update);
+	game.serialise(update);
 	Event updateEvent(Event::EVENT_GAMEUPDATE, 0);
+	updateEvent.setStream(update);
 
 	//log(LG_DEBUG, "Update event entities %d", update.update.entities.size());
 
@@ -175,5 +144,3 @@ void Server::sendUpdate()
 		net.sendEvent(updateEvent);
 	}
 }
-
-
