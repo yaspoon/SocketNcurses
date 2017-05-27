@@ -22,6 +22,7 @@ void ReadWriteBufferTestSuite::TestReadWriteBool()
 	WriteBuffer wb;
 
 	TEST_ASSERT(wb.SerialiseUint(false, bits_required(0, 1)));
+	wb.flush();
 	rb.fillFromBuffer(wb.bytes(), wb.totalBytes());
 	uint64_t tmp;
 	rb.SerialiseUint(tmp, bits_required(0, 1));
