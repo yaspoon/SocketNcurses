@@ -1,9 +1,11 @@
 #include "Network.h"
+#include "Log.h"
 #include "Common.h"
 #include <string.h>
 
 #include <sys/epoll.h>
 #include <ncurses.h>
+
 
 #include "ReadBuffer.h"
 #include "WriteBuffer.h"
@@ -46,12 +48,12 @@ bool Network::Setup(std::string address, std::string port, NET_Mode inMode)
             }
             else
             {
-                log(LG_ERROR, const_cast<char *>("Network::Setup Failed to create thread"));
+                DEBUG << "Network::Setup Failed to create thread" << DEBUG_END;
             }
         }
         else
         {
-            log(LG_ERROR, const_cast<char *>("Network::Setup Failed to create socket"));
+            DEBUG << "Network::Setup Failed to create socket" << DEBUG_END;
         }
     }
 
@@ -65,12 +67,12 @@ bool Network::SendFrame(int fd, Frame frame, sockaddr_storage peer, socklen_t pe
 	frame.serialise(buf);
 	buf.flush();
 	size_t frameSize = buf.totalBytes();
-	uint8_t *data = buf.bytes();
+	uint64_t *data = buf.bytes();
 	statistics.addBytes(frameSize, STAT_OUT);
 
 
-	if(!sendto(fd, &data, frameSize, 0, (struct sockaddr*) &peer, peer_len) == frameSize) {
-		log(LG_ERROR, const_cast<char *>("Network::SendFrame Failed to write frame ERROR:%s"), strerror(errno));
+	if(!sendto(fd, data, frameSize, 0, (struct sockaddr*) &peer, peer_len) == frameSize) {
+		DEBUG << "Network::SendFrame Failed to write frame ERROR:" << strerror(errno) << DEBUG_END;
 	}
 
 	return retVal;
@@ -78,7 +80,8 @@ bool Network::SendFrame(int fd, Frame frame, sockaddr_storage peer, socklen_t pe
 
 int Network::ReceiveFrame(int fd, Buffer &frame, struct sockaddr_storage *peer, socklen_t *peer_len)
 {
-	static uint8_t buf[MAX_NETWORK_BUFFER_BYTES];
+	static uint64_t buf[MAX_NETWORK_BUFFER_WORDS];
+	memset(buf, 0, sizeof(uint64_t) * MAX_NETWORK_BUFFER_WORDS);
 	*peer_len = sizeof(struct sockaddr_storage);
 
 	int nread = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr*)peer, peer_len);
@@ -86,7 +89,7 @@ int Network::ReceiveFrame(int fd, Buffer &frame, struct sockaddr_storage *peer, 
 	if(nread != -1) {
 		//log(LG_DEBUG, "Network::ReceiveFrame Read %d bytes frame from socket", nread);
 	} else {
-		log(LG_ERROR, const_cast<char *>("Network::ReceiveFrame Failed to read from socket reason:%s"), strerror(errno));
+		DEBUG << "Network::ReceiveFrame Failed to read from socket reason:" << strerror(errno) << DEBUG_END;
 	}
 
 	frame.fillFromBuffer(buf, nread);
@@ -122,22 +125,22 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
 
     if(ret == 0)
     {
-        log(LG_DEBUG, const_cast<char *>("Got Address info, continuing"));
+        DEBUG << "Got Address info, continuing" << DEBUG_END;
 
         struct addrinfo* rp = NULL;
 
         for(rp = info; rp != NULL; rp = rp->ai_next)
         {
             int tmpSfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-            log(LG_DEBUG, const_cast<char *>("Creating Socket"));
+            DEBUG << "Creating Socket" << DEBUG_END;
 
             if(tmpSfd != -1)
             {
-                log(LG_DEBUG, const_cast<char *>("Created Socket successfully"));
+                DEBUG << "Created Socket successfully" << DEBUG_END;
                 if(netType == MODE_CLIENT)
                 {
                     sfd = tmpSfd;
-                    log(LG_DEBUG, const_cast<char *>("Network::Created socket successfully ready to send as client"));
+                    DEBUG << "Network::Created socket successfully ready to send as client" << DEBUG_END;
                     connection tmp = connections[id];
                     memcpy(&tmp.peer_addr, rp->ai_addr, sizeof(struct sockaddr));
                     tmp.peer_addr_len = rp->ai_addrlen;
@@ -150,7 +153,7 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
                     if(bind(tmpSfd, rp->ai_addr, rp->ai_addrlen) == 0)
                     {
                         sfd = tmpSfd;
-                        log(LG_DEBUG, const_cast<char *>("Network::CreateSocket Bound socket for listening as server"));
+                        DEBUG << "Network::CreateSocket Bound socket for listening as server" << DEBUG_END;
                         retVal = true;
                         break;
                     }
@@ -162,7 +165,7 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Network::CreateSocket Failed to get Address info Error:%s"), gai_strerror(ret));
+        DEBUG << "Network::CreateSocket Failed to get Address info Error:" << gai_strerror(ret) << DEBUG_END;
     }
 
     return retVal;
@@ -171,7 +174,7 @@ bool Network::CreateSocket(std::string address, std::string port, NET_Mode netTy
 void* Network::run( void* argument)
 {
     Network *net = static_cast<Network*>(argument);
-    log(LG_DEBUG, const_cast<char *>("THREAD::Network::run Added socket fd to epoll fine"));
+    DEBUG << "THREAD::Network::run Added socket fd to epoll fine" << DEBUG_END;
     struct epoll_event ev;
     struct epoll_event events[10];
     int epfd;
@@ -220,7 +223,7 @@ void* Network::run( void* argument)
 			    {
 				    case Frame::CONNECTION_REQUEST:
 				{
-				    log(LG_DEBUG, const_cast<char *>("Created new connection from %s:%s"), host, serv);
+				    DEBUG << "Created new connection from " << host << serv << DEBUG_END;
 				    connection tmp;
 				    std::string address(host);
 				    std::string port(serv);
@@ -237,7 +240,7 @@ void* Network::run( void* argument)
 					net->nextId = net->nextId + 1;
 				    }
 
-				    log(LG_DEBUG, const_cast<char *>("New connection id:%d"), tmp.id);
+				    DEBUG << "New connection id:" << tmp.id << DEBUG_END;
 
 				    net->connections[tmp.id] = tmp;
 
@@ -269,14 +272,14 @@ void* Network::run( void* argument)
 				    tmp.type = Event::EVENT_NET;
 				    tmp.net.net_type = Event::EVENT_NET_CONNECTED;
 				    net->addEvent(tmp);//.pushBack(tmp);
-				    log(LG_DEBUG, const_cast<char *>("THREAD::Network::run Connection accepted"));
+				    DEBUG << "THREAD::Network::run Connection accepted" << DEBUG_END;
 				}
 				break;
 				case Frame::DATA:
 				{
 					//This should really be push up into the event layer and it can figure out what to do with it!
-					log(LG_DEBUG, const_cast<char *>("STUB: THREAD::Network::run: data network frame unhandled"));
-					std::cout << "host:" << host << " serv:" << serv << std::endl;
+					DEBUG << "STUB: THREAD::Network::run: data network frame unhandled" << DEBUG_END;
+					DEBUG << "host:" << host << " serv:" << serv << DEBUG_END;
 					/*int id = findId(address, port);
 					Event tmp(EVENT_NET_DATA, id);
 					tmp.setStream(buf);
@@ -289,22 +292,23 @@ void* Network::run( void* argument)
 				    //log(LG_DEBUG, "THREAD::Network::run Got ack frame");
 				break;
 				default:
-				    log(LG_ERROR, const_cast<char *>("THREAD::Network::run Couldn't find frame type :("));
+				    //DEBUG << "THREAD::Network::run Couldn't find frame of type " << frame.getType() << "  :(" <<  << DEBUG_END;
+				DEBUG << "Thread::Network::run Couldn't find frame of type " << frame.getType() << " :(" << DEBUG_END;
 				    break;
 			    }
 		    } else {
-			    std::cout << "Failed to deserialize Frame ignoring" << std::endl;
+			   DEBUG << "Failed to deserialize Frame ignoring" << DEBUG_END;
 		    }
                 }
 
             }
             else if(nfds == 0)
             {
-                log(LG_DEBUG, const_cast<char *>("THREAD::Network::run No events"));
+                DEBUG << "THREAD::Network::run No events" << DEBUG_END;
             }
             else if(nfds == -1)
             {
-                log(LG_ERROR, const_cast<char *>("THREAD::Network::run epoll_wait returned error: %s"), strerror(errno));
+                DEBUG << "THREAD::Network::run epoll_wait returned error: " << strerror(errno) << DEBUG_END;
             }
 
         }
@@ -332,7 +336,7 @@ void Network::handleConnectionRequest(int frameNum, sockaddr_storage peer_addr, 
     address = std::string(host);
     port = std::string(serv);
 
-    log(LG_DEBUG, const_cast<char *>("Created new connection from %s:%s"), host, serv);
+    DEBUG << "Created new connection from " << host << ":" << serv << DEBUG_END;
     connection tmp;
     tmp.frame_num = frameNum;
     tmp.peer_addr = peer_addr;
@@ -411,10 +415,10 @@ void Network::handleNetEvent(Event event)
     {
     case Event::EVENT_NET_CONNECT:
         {
-            log(LG_DEBUG, const_cast<char *>("Network::sendEvent Event::CONNECT, sending connection request to %s:%s"), net.address.c_str(), net.port.c_str());
+            DEBUG << "Network::sendEvent Event::CONNECT, sending connection request to " << net.address << ":" << net.port << DEBUG_END;
             //if(!setup)
             {
-                log(LG_DEBUG, const_cast<char *>("Client ID set to %d"), nextId);
+                DEBUG << "Client ID set to " << nextId << DEBUG_END;
                 event.id = 0;//nextId;
                 //nextId++;
             }
@@ -432,12 +436,12 @@ void Network::handleNetEvent(Event event)
         break;
     case Event::EVENT_NET_CONNECT_ACK:
         {
-            log(LG_DEBUG, const_cast<char *>("Network::sendEvent Event::EVENT_NET_CONNECT_ACK event received"));
+            DEBUG << "Network::sendEvent Event::EVENT_NET_CONNECT_ACK event received" << DEBUG_END;
             frame.setType(Frame::CONNECTION_REQUEST_ACK);
         }
         break;
     default:
-        log(LG_ERROR, const_cast<char *>("ERROR:Network::sendEvent unknown event type"));
+        DEBUG << "ERROR:Network::sendEvent unknown event type" << DEBUG_END;
     }
 
     connection to = connections[event.id];
@@ -452,7 +456,7 @@ void Network::handleKeyEvent(Event event)
     frame.setNum(0);
     Event::Key_Event key = event.key;
 
-    log(LG_DEBUG, const_cast<char *>("STUB: handleKeyEvent, event handling commented out for now\n"));
+    DEBUG << "STUB: handleKeyEvent, event handling commented out for now" << DEBUG_END;
 
     /*if(key.key_type == Event::EVENT_KEY_DOWN)
     {
@@ -475,18 +479,9 @@ void Network::handleGameUpdateEvent(Event event)
     Frame frame;
     frame.setType(Frame::DATA);
     frame.setNum(0);
+    frame.setData(event.getData());
 
-    log(LG_DEBUG, const_cast<char *>("STUB: handleGameUpdateEvent, event handling commented out for now\n"));
-    /*frame.body.data.data_type = DATA_GAMEUPDATE;
-
-    int size = event.update.entities.size() > 8 ? 8 : event.update.entities.size();
-
-    frame.body.data.numEnts = size;
-
-    for(int i = 0; i < size; i++)
-    {
-        frame.body.data.ents[i] = event.update.entities[i];
-    }*/
+    STUB << "handleGameUpdateEvent, event handling commented out for now" << DEBUG_END;
 
     connection to = connections[event.id];
 
@@ -522,7 +517,7 @@ void Network::addEvent(Event event)
     }
     else
     {
-        log(LG_DEBUG, const_cast<char *>("Failed to lock mutex :("));
+        DEBUG << "Failed to lock mutex :(" << DEBUG_END;
     }
 
 }

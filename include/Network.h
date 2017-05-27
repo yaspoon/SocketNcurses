@@ -19,7 +19,7 @@
 
 #include <pthread.h>
 
-const uint32_t MAX_NETWORK_BUFFER_BYTES = 1500;
+const uint32_t MAX_NETWORK_BUFFER_WORDS = 188;
 
 /*
 struct NET_frame_data {
