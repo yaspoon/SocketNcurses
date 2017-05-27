@@ -1,5 +1,7 @@
 #include "NetworkStatistics.h"
 #include "Common.h"
+#include "Log.h"
+
 
 NetworkStatistics::NetworkStatistics()
 : inBytes(0), inKibibytes(0), inMebibytes(0), outBytes(0), outKibibytes(0), outMebibytes(0) //initialisation list
@@ -34,7 +36,7 @@ int NetworkStatistics::getBytes(stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Failed to lock"));
+        DEBUG << "Failed to lock" << DEBUG_END;
     }
 
     return bytes;
@@ -65,7 +67,7 @@ float NetworkStatistics::getKibibytes(stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Failed to lock"));
+        DEBUG << "Failed to lock" << DEBUG_END;
     }
 
     return kibibytes;
@@ -102,7 +104,7 @@ float NetworkStatistics::getMebibytes(stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Failed to lock"));
+        DEBUG << "Failed to lock" << DEBUG_END;
     }
 
     return mebibytes;
@@ -115,7 +117,7 @@ void NetworkStatistics::addBytes(int bytes, stat_mode mode)
         switch(mode)
         {
             case STAT_UNKNOWN:
-                log(LG_ERROR,const_cast<char *>("NetworkStatistics::addbytes,Mode is unknown so this does nothing.."));
+                DEBUG << "NetworkStatistics::addbytes,Mode is unknown so this does nothing.." << DEBUG_END;
             break;
             case STAT_IN:
             {
@@ -164,7 +166,7 @@ void NetworkStatistics::addBytes(int bytes, stat_mode mode)
     }
     else
     {
-        log(LG_ERROR, const_cast<char *>("Failed to lock"));
+        DEBUG << "Failed to lock" << DEBUG_END;
     }
 }
 
@@ -173,7 +175,7 @@ void NetworkStatistics::addKibibytes(int kibibytes, stat_mode mode)
     switch(mode)
     {
         case STAT_UNKNOWN:
-            log(LG_ERROR,const_cast<char *>("NetworkStatistics::addkibibytes,Mode is unknown so this does nothing.."));
+            DEBUG << "NetworkStatistics::addkibibytes,Mode is unknown so this does nothing.." << DEBUG_END;
         break;
         case STAT_IN:
         {
@@ -226,7 +228,7 @@ void NetworkStatistics::addMebibytes(int mebibytes, stat_mode mode)
     switch(mode)
     {
         case STAT_UNKNOWN:
-            log(LG_ERROR, const_cast<char *>("NetworkStatistics::addMebibytes,Mode is unknown so this does nothing.."));
+            DEBUG << "NetworkStatistics::addMebibytes,Mode is unknown so this does nothing.." << DEBUG_END;
             break;
         case STAT_IN:
             inMebibytes += mebibytes;
