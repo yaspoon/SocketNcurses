@@ -51,21 +51,17 @@ void Frame::setId(uint32_t newId)
 	id = newId;
 }
 
+void Frame::setData(Buffer data)
+{
+	this->data = data;
+}
+
 template <typename Stream> bool Frame::serialise(Stream &stream)
 {
-	if(stream.isWriting)
-	{
-		std::cout << "Writer" << std::endl;
-	}
-
 	serialise_uint(stream, type, Frame::TYPE_START, Frame::TYPE_END);
 	serialise_uint(stream, id, 0, UINT32_MAX);
 	serialise_uint(stream, num, 0, UINT32_MAX);
-
-	if(stream.isReading)
-	{
-		std::cout << "Reader" << std::endl;
-	}
+	serialise_buffer(stream, data);
 
 	return true; /*This is gross, the serialise_* macros have return statements in them. So returning here is par for the course...*/
 }

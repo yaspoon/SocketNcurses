@@ -9,6 +9,7 @@ private:
 	uint8_t type; //It's really a Net_type enum
 	uint32_t id;
 	uint32_t num;
+	Buffer data;
 public:
 	Frame();
 	Frame(uint8_t newType, uint32_t newNum);
@@ -19,6 +20,7 @@ public:
 	void setType(uint8_t newType);
 	void setNum(uint32_t newNum);
 	void setId(uint32_t newId);
+	void setData(Buffer data);
 	template <typename Stream> bool serialise(Stream &stream);
 
 	enum
