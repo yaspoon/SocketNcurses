@@ -29,3 +29,8 @@ bool WriteBuffer::SerialiseBits(uint64_t input, uint32_t nobits)
 {
 	return Buffer::write(input, nobits) == OKAY ? true : false;
 }
+
+bool WriteBuffer::SerialiseBuffer(Buffer buf)
+{
+	return Buffer::writeBuffer(buf);
+}
