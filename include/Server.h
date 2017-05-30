@@ -54,5 +54,6 @@ class Server
         void handleKeyEvent(Event event);
         void sendUpdate();
 	returnCodes_t collectEvents();
+	returnCodes_t processEvents();
 };
 #endif // SERVER_H
