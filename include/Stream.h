@@ -106,4 +106,15 @@ template <int64_t min, int64_t max> struct BitsRequired
 			return false;						\
 		}								\
 	} while(0)
+
+#define serialise_array(stream, array, nobytes)					\
+	do									\
+	{									\
+		if(!stream.ByteAlign()) {					\
+			return false;						\
+		}								\
+		if(!stream.SerialiseArray(array, nobytes) {			\
+			return false;						\
+		}								\
+	} while(0)
 #endif
