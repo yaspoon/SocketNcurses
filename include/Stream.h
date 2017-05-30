@@ -113,7 +113,7 @@ template <int64_t min, int64_t max> struct BitsRequired
 		if(!stream.ByteAlign()) {					\
 			return false;						\
 		}								\
-		if(!stream.SerialiseArray(array, nobytes) {			\
+		if(!stream.SerialiseArray(array, nobytes)) {			\
 			return false;						\
 		}								\
 	} while(0)
