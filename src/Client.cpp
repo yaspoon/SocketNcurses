@@ -129,17 +129,17 @@ void Client::run()
             }
             clear();
 
-            std::vector<Player> players = state.getPlayers();
             //mvprintw(1, 1, "Num players %d", players.size());
 
-            for(int i = 0; i < players.size(); i++)
+	    STUB << "Client player update" << STUB_END;
+            /*for(int i = 0; i < players.size(); i++)
             {
                 Player player = players[i];
 
                 mvprintw(player.y, player.x, "%c", player.character);
 
 
-            }
+            }*/
 
             printNetStats();
 
@@ -182,7 +182,7 @@ void Client::handleEvent(Event event)
         case Event::EVENT_GAMEUPDATE:
         {
 		ReadBuffer readBuffer(event.stream);
-            state.serialise(readBuffer);
+		game.serialise(readBuffer);
         }
         break;
     }
