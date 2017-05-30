@@ -4,6 +4,8 @@
 #include "WriteBuffer.h"
 #include "Stream.h"
 
+#include <string.h>
+
 Players::Players()
 {
 	memset(positions, 0, sizeof(positions));
