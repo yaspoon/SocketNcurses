@@ -68,6 +68,17 @@ void Game::handleKeyEvent(Event event)
     }
 }
 
+returnCodes_t Game::update(long int time)
+{
+	STUB << "update" << DEBUG_END;
+
+	for(std::map<int, Player>::iterator it = players.begin(); it != players.end(); ++it)
+	{
+		Player player = *it;
+		player.update(time);
+	}
+}
+
 template <typename Stream> bool Game::serialise(Stream &stream)
 {
 	STUB << "Game::serialise" << STUB_END;

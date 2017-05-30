@@ -2,7 +2,7 @@
 #define GAME_H
 
 #include "Event.h"
-#include "GameState.h"
+#include "Players.h"
 
 /*
  * Arbiter of all the game logic and data
@@ -10,12 +10,12 @@
 class Game
 {
 private:
-	GameState state;
 	void handleKeyEvent(Event event);
 	bool addPlayer();
 public:
 	Game();
 	~Game();
+	returnCodes_t update(long int time);
 	template <typename Stream> bool serialise(Stream &stream);
 };
 
