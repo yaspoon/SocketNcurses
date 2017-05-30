@@ -3,7 +3,7 @@
 
 #include <string>
 #include <uuid/uuid.h>
-#include "Player.h"
+#include "Players.h"
 #include "Event.h"
 #include <vector>
 #include "Stream.h"
@@ -78,6 +78,7 @@ class Event
         virtual ~Event();
 	void setStream(const Buffer input);
 	void setId(int newId);
+	Buffer getData();
     protected:
     private:
 };

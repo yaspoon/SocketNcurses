@@ -2,8 +2,7 @@
 #include "Common.h"
 
 Event::Event()
-{
-    type = EVENT_DEFAULT;
+{ type = EVENT_DEFAULT;
     id = -1;
 }
 
@@ -54,4 +53,9 @@ void Event::setStream(const Buffer input)
 void Event::setId(int newId)
 {
 	id = newId;
+}
+
+Buffer Event::getData()
+{
+	return stream;
 }
