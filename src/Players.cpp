@@ -1,17 +1,17 @@
-#include "Player.h"
+#include "Players.h"
 #include <typeinfo>
 #include "ReadBuffer.h"
 #include "WriteBuffer.h"
 #include "Stream.h"
 
-Player::Player()
+Players::Players()
 {
-    x = 0;
-    y = 0;
-    character = '#';
+	memset(positions, 0, sizeof(positions));
+	memset(velocitys, 0, sizeof(velocitys));
+	memset(characters, 0, sizeof(characters));
 }
 
-Player::~Player()
+Players::~Players()
 {
     //dtor
 }
@@ -26,14 +26,15 @@ Player& Player::operator=(Player& inPlayer)
 
 }*/
 
-template <typename Stream> bool Player::serialise(Stream &stream)
+template <typename Stream> bool Players::serialise(Stream &stream)
 {
-	serialise_int(stream, x, INT32_MIN, INT32_MAX); 
-	serialise_int(stream, y, INT32_MIN, INT32_MAX); 
-	serialise_uint(stream, character, 0, UINT8_MAX);
+	serialise_uint(stream, numPlayers, 0, UINT32_MAX);
+	serialise_array(stream, (char*)positions, sizeof(positions));
+	serialise_array(stream, (char*)velocitys, sizeof(velocitys));
+	serialise_array(stream, (char*)characters, sizeof(characters));
 
 	return true;
 }
 
-template bool Player::serialise<ReadBuffer>(ReadBuffer&);
-template bool Player::serialise<WriteBuffer>(WriteBuffer&);
+template bool Players::serialise<ReadBuffer>(ReadBuffer&);
+template bool Players::serialise<WriteBuffer>(WriteBuffer&);
