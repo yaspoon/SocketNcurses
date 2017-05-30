@@ -1,13 +1,13 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 #include "Common.h"
-#include "Position2D.h"
+#include "Vec2D.h"
 
-class Entity
+class Entitys
 {
     public:
-        Entity();
-        virtual ~Entity();
+        Entitys();
+        virtual ~Entitys();
     protected:
     private:
 };

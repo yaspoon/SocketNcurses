@@ -1,11 +1,11 @@
-#include "Entity.h"
+#include "Entitys.h"
 
-Entity::Entity()
+Entitys::Entitys()
 {
     //ctor
 }
 
-Entity::~Entity()
+Entitys::~Entitys()
 {
     //dtor
 }
