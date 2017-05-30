@@ -51,7 +51,7 @@ void Timer::pause()
 
 void Timer::unpause()
 {
-
+	STUB << "not implemented, not used yet either" << STUB_END;
 }
 
 bool Timer::isPaused()
