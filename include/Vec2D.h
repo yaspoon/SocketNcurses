@@ -1,8 +1,8 @@
-#ifndef POSITION_H
-#define POSITION_H
-struct Position2D
+#ifndef VEC2D_H
+#define VEC2D_H
+struct Vec2D
 {
-	int x;
-	int y;
+	float x;
+	float y;
 };
 #endif
