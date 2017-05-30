@@ -21,10 +21,10 @@ private:
 	int bitsWritten;
 	uint64_t scratch;
 	uint64_t *data;
-	const static int bitsPerWord = sizeof(scratch) * 8;
 	int scratchBits;
 	returnCodes_t status;
 public:
+	const static int bitsPerWord = sizeof(scratch) * 8;
 	Buffer();
 	Buffer(const Buffer &copy);
 	~Buffer();
