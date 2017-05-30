@@ -41,13 +41,39 @@ returnCodes_t Server::run()
 
     char data;
     Timer timer;
+    long int previousTime = 0;
+    long int currentTime = 0;
     bool quit = false; //Don't quit, just keep looping ;)
+    int MILLI_SECONDS_PER_SECOND = 1000;
+    float timePerFrame = MILLI_SECONDS_PER_SECOND / MAXFPS;
+
+	timer.start();
+	previousTime = timer.getTime();
+	currentTime = previousTime;
 
     while(!quit)
     {
-        timer.stop();
-        timer.start();
+	collectEvents(); /*Get all the events ready for the update*/
 
+	processEvents();
+
+	previousTime = currentTime;
+	currentTime = timer.getTime();
+        float delta = currentTime - previousTime;
+	game.update(delta);
+
+        sendUpdate();
+
+        if(delta < timePerFrame)
+        {
+            usleep((timePerFrame - delta) * 1000);
+        }
+    }
+}
+
+returnCodes_t Server::processEvents()
+{
+	STUB << "just adding this so it compiles" << STUB_END;
         Event tmp = net.getEvent();
 
         switch(tmp.type)
@@ -60,18 +86,7 @@ returnCodes_t Server::run()
                 break;
         }
 
-	collectEvents(); /*Get all the events ready for the update*/
-
-        long int time = timer.getTime();
-	game.update(time);
-
-        sendUpdate();
-
-        if(time < (1000/MAXFPS))
-        {
-            usleep(((1000/MAXFPS) - time) * 1000);
-        }
-    }
+	return OKAY;
 }
 
 returnCodes_t Server::collectEvents()
