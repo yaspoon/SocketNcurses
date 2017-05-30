@@ -41,8 +41,9 @@ returnCodes_t Server::run()
 
     char data;
     Timer timer;
+    bool quit = false; //Don't quit, just keep looping ;)
 
-    while(true)
+    while(!quit)
     {
         timer.stop();
         timer.start();
@@ -59,9 +60,13 @@ returnCodes_t Server::run()
                 break;
         }
 
-        sendUpdate();
+	collectEvents(); /*Get all the events ready for the update*/
 
         long int time = timer.getTime();
+	game.update(time);
+
+        sendUpdate();
+
         if(time < (1000/MAXFPS))
         {
             usleep(((1000/MAXFPS) - time) * 1000);
