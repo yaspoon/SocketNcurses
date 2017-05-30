@@ -1,8 +1,8 @@
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 
-#include "Player.h"
-#include "Entity.h"
+#include "Players.h"
+#include "Entitys.h"
 #include <map>
 #include <vector>
 #include "Stream.h"
